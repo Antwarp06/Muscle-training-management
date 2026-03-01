@@ -7,5 +7,5 @@ public class AppDbContext : DbContext{
 
     }
 
-    public DbSet<Workout> Workout { get; set; } = null;
+    public DbSet<Workout> Workout { get; set; } = null!;
 }
