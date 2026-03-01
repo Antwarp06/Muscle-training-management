@@ -9,7 +9,7 @@ interface Workout {
 }
 
 const WorkoutPage = () =>{
-    const [ Workouts, setWorkouts ] = useState<Workout[]>([]);
+    const [ workouts, setWorkouts ] = useState<Workout[]>([]);
     const [eventName, setEventName ] = useState('');
     const [weight, setWeight ] = useState<number | string>('');
     const [reps, setReps ] = useState<number | string>('');
@@ -17,7 +17,7 @@ const WorkoutPage = () =>{
 //データの取得
 const loadData = async () => {
     const res = await fetch('http://localhost:5062/api/Workouts');
-    const date = await res.json();
+    const data = await res.json();
     setWorkouts(data);
     };
 
@@ -54,11 +54,27 @@ return(
         <button onClick={handleSave}>保存</button>
 
         <hr />
-        <ul>
-            {Workouts.map((w,i)=> (
-                <li key={i}>{w.event_Name}: {w.weight}kg * {w.reps}回</li>
-            ))}
-        </ul>
+        
+        {/*　一覧表示エリア　*/}
+        <h3></h3>
+        <table border={1} style={{ width: '100%', borderCollapse: 'collapse',textAlign: 'center'}}>
+            <thead>
+                <tr style={{ backgroundColor: '#eee' }}>
+                    <th>種目</th>
+                    <th>重量</th>
+                    <th>回数</th>
+                </tr>
+            </thead>
+            <tbody>
+                {workouts.map((w, index) => ( 
+                    <tr key={index}>
+                        <td>{w.event_Name}</td>
+                        <td>{w.weight}</td>
+                        <td>{w.reps}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
     </div>
 );
 };
