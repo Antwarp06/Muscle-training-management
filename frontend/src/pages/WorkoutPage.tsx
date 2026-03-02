@@ -8,11 +8,22 @@ interface Workout {
     reps: number;
 }
 
+const CATEGORY_MASTER = {
+    "胸": ["ベンチプレス", "ダンベルフライ","ペックフライ"],
+    "背中": ["ラットプルダウン", "ベントオーバーロー", "チンニング"],
+    "脚": ["スクワット", "レックプレス", "レッグエクステンション"],
+    "肩": ["サイドレイズ", "ショルダープレス", "フロントレイズ"],
+    "腕": ["アームカール","ダンベルカール","ケーブルカール"]
+};
+
+type CategoryKey = keyof typeof CATEGORY_MASTER;
+
 const WorkoutPage = () =>{
     const [ workouts, setWorkouts ] = useState<Workout[]>([]);
-    const [eventName, setEventName ] = useState('');
-    const [weight, setWeight ] = useState<number | string>('');
-    const [reps, setReps ] = useState<number | string>('');
+    const [ selectedCategory, setSlectedCategory ] = useState<CategoryKey>("胸");
+    const [ selectedEvent, setSelectedEvent ] = useState(CATEGORY_MASTER["胸"][0]);
+    const [ weight, setWeight ] = useState<number | string>('');
+    const [ reps, setReps ] = useState<number | string>('');
 
 //データの取得
 const loadData = async () => {
@@ -48,9 +59,25 @@ const handleSave = async () => {
 return(
     <div style={{padding:'20px'}}>
         <h2>トレーニング記録</h2>
-        <input placeholder="種目" value={eventName} onChange={e => setEventName(e.target.value)}/>
-        <input type="number" step="0.1" min ="0" placeholder="kg" value={weight} onChange={e => setWeight(e.target.value)}/>
-        <input type="number" min ="0" placeholder="回" value={reps} onChange={e => setReps(e.target.value)}/>
+        {/* 部位の選択 */}
+        <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>部位</label>
+            <select style={{ width: '100%', padding: '8px' }} value={selectedCategory}
+            onChange={(e) => {const cat = e.target.value as CategoryKey; setSlectedCategory(cat); setSelectedEvent(CATEGORY_MASTER[cat][0]);}}>
+            {Object.keys(CATEGORY_MASTER).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+        </div>
+
+        {/* 種目の選択 */}
+        <div>
+            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>種目</label>
+            <select style={{ width: '100%', padding: '8px' }} value={selectedEvent} 
+            onChange={(e) => setSelectedEvent(e.target.value)}>{CATEGORY_MASTER[selectedCategory].map(event => 
+            (<option key={event} value={event}>{event}</option>))}
+            </select>
+        </div>
+        <input type="number" step="0.1" min ="0" placeholder="重量(kg)" value={weight} onChange={e => setWeight(e.target.value)}/>
+        <input type="number" min ="0" placeholder="回数(回)" value={reps} onChange={e => setReps(e.target.value)}/>
         <button onClick={handleSave}>保存</button>
 
         <hr />
