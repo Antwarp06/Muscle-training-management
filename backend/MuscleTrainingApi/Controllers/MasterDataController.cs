@@ -43,4 +43,27 @@ public class MasterDataController : ControllerBase {
         }
         return exercises;
     }
+
+    // --- 部位の追加 ---
+    [HttpPost("categories")]
+    public async Task<IActionResult> AddCategory([FromBody] Category category) {
+        using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        using var cmd = new NpgsqlCommand("INSERT INTO Categories (category_name) VALUES (@name)", conn);
+        cmd.Parameters.AddWithValue("name", category.Category_Name);
+        await cmd.ExecuteNonQueryAsync();
+        return Ok();
+    }
+
+// --- 種目の追加 ---
+    [HttpPost("exercises")]
+    public async Task<IActionResult> AddExercise([FromBody] Exercise exercise) {
+        using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        using var cmd = new NpgsqlCommand("INSERT INTO Exercises (category_id, exercise_name) VALUES (@catId, @name)", conn);
+        cmd.Parameters.AddWithValue("catId", exercise.Category_Id);
+        cmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
+        await cmd.ExecuteNonQueryAsync();
+        return Ok();
+    }
 }
