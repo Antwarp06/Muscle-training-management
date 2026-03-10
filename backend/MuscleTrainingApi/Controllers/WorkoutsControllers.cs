@@ -72,4 +72,19 @@ public class WorkoutsController : ControllerBase
         }
         return Ok(workouts);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id){
+        using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        //指定されたrecord_idの行を削除するSQL
+        using car cmd = new NpgsqlCommand("DELETE FROM Workouts record_id = @id",conn);
+        cmd.Parameters.AddWithValue( "id",id ):
+        int affectedRows = await cmd.ExecuteNonQueryAsync();
+
+        if( affectedRows == 0 ){
+            return NotFound(new { message = "指定された記録は見つかりませんでした。"});
+        }
+        return Ok(new { message = "削除完了しました。"});
+    }
 }
