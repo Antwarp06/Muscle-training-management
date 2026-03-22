@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MuscleTrainingApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MuscleTrainingApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260322124919_UpdateForSupabase")]
+    partial class UpdateForSupabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,43 +24,6 @@ namespace MuscleTrainingApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("MuscleTrainingApi.Models.Category", b =>
-                {
-                    b.Property<int>("Category_Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Category_Id"));
-
-                    b.Property<string>("Category_Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Category_Id");
-
-                    b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("MuscleTrainingApi.Models.Exercise", b =>
-                {
-                    b.Property<int>("Exercise_Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Exercise_Id"));
-
-                    b.Property<int>("Category_Id")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Exercise_Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Exercise_Id");
-
-                    b.ToTable("Exercises");
-                });
 
             modelBuilder.Entity("MuscleTrainingApi.Models.Workout", b =>
                 {

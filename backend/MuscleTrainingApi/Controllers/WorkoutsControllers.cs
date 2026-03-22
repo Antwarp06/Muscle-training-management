@@ -24,7 +24,7 @@ public class WorkoutsController : ControllerBase
 
         // 2. SQLの準備（新しいテーブル構造に合わせる）
         using var cmd = new NpgsqlCommand(
-            "INSERT INTO Workouts (exercise_id, weight, reps) VALUES (@exId, @weight, @reps)", 
+            "INSERT INTO \"Workout\" (exercise_id, weight, reps) VALUES (@exId, @weight, @reps)", 
             conn
         );
 
@@ -53,7 +53,7 @@ public class WorkoutsController : ControllerBase
                 e.exercise_name, 
                 w.weight, 
                 w.reps 
-            FROM Workouts w
+            FROM ""Workout"" w
             JOIN Exercises e ON w.exercise_id = e.exercise_id
             ORDER BY w.record_id DESC";
 
@@ -78,8 +78,8 @@ public class WorkoutsController : ControllerBase
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         //指定されたrecord_idの行を削除するSQL
-        using car cmd = new NpgsqlCommand("DELETE FROM Workouts record_id = @id",conn);
-        cmd.Parameters.AddWithValue( "id",id ):
+        using var cmd = new NpgsqlCommand("DELETE FROM \"Workout\" record_id = @id",conn);
+        cmd.Parameters.AddWithValue( "id",id );
         int affectedRows = await cmd.ExecuteNonQueryAsync();
 
         if( affectedRows == 0 ){

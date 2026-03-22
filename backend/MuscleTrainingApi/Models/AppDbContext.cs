@@ -8,4 +8,6 @@ public class AppDbContext : DbContext{
     }
 
     public DbSet<Workout> Workout { get; set; } = null!;
+    public DbSet<Exercise> Exercises { get; set; } = null!;
+    public DbSet<Category> Categories { get; set; } = null!;
 }
