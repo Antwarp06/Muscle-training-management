@@ -1,5 +1,5 @@
 # 1. ビルド用の環境（SDK）
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # プロジェクトファイルをコピーして復元
@@ -11,7 +11,7 @@ COPY . .
 RUN dotnet build "MuscleTrainingApi.csproj" -c Release -o /app/build
 
 # 2. 実行用の環境（Runtime）
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/build .
 
