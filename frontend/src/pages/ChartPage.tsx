@@ -15,7 +15,7 @@ const ChartPage = () =>{
     const [ chartData, setChartData ] = useState<any>(null);
 
     useEffect(() =>{
-        fetch('http://localhost:5062/api/Workouts')
+        fetch('https://muscle-training-management.onrender.com/api/workouts')
             .then(res => res.json())
             .then((data: Workout[]) =>{
                 //グラフ用にデータ形成に整える

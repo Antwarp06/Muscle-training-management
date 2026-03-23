@@ -16,7 +16,7 @@ const SettingsPage: React.FC = () => {
 // 1. 既存の部位を取得する関数
     const fetchCategories = async () => {
         try {
-        const res = await fetch('http://localhost:5062/api/MasterData/categories');
+        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
         if (res.ok) {
             const data = await res.json();
             setCategories(data);
@@ -33,7 +33,7 @@ const SettingsPage: React.FC = () => {
   // 2. 新しい部位を登録する処理
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
-        await fetch('http://localhost:5062/api/MasterData/categories', {
+        await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category_Name: newCategoryName })
@@ -51,7 +51,7 @@ const SettingsPage: React.FC = () => {
         return;
     }
 
-    await fetch('http://localhost:5062/api/MasterData/exercises', {
+    await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

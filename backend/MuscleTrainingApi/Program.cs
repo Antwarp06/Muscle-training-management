@@ -36,7 +36,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 
 // セキュリティ設定
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // 作成した WorkoutsController を URL に紐付ける
 app.MapControllers();

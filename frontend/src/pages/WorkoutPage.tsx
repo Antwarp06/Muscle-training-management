@@ -20,9 +20,9 @@ const WorkoutPage = () => {
     // 1. データの取得（マスターデータと履歴）
     const loadAllData = async () => {
         const [catRes, exRes, historyRes] = await Promise.all([
-            fetch('http://localhost:5062/api/MasterData/categories'),
-            fetch('http://localhost:5062/api/MasterData/exercises'),
-            fetch('http://localhost:5062/api/Workouts') // 履歴取得用
+            fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
+            fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises'),
+            fetch('https://muscle-training-management.onrender.com/api/workouts') // 履歴取得用
         ]);
 
         setCategories(await catRes.json());
@@ -45,7 +45,7 @@ const WorkoutPage = () => {
             reps: Number(reps)
         };
 
-        await fetch('http://localhost:5062/api/Workouts', {
+        await fetch('https://muscle-training-management.onrender.com/api/workouts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -58,7 +58,7 @@ const WorkoutPage = () => {
 
     const handkeDelete = async ( recordId: number ) => {
         if(!confirm("本当に削除しますか？")) return;
-        await fetch(`http://localhost:5062/api/Workouts/${recordId}`,{ method: 'DELETE'});
+        await fetch(`https://muscle-training-management.onrender.com/api/Workouts/${recordId}`,{ method: 'DELETE'});
 
         loadAllData();
     };

@@ -1,4 +1,4 @@
-@MuscleTrainingApi_HostAddress = http://localhost:5062
+@MuscleTrainingApi_HostAddress = https://muscle-training-management.onrender.com
 
 GET {{MuscleTrainingApi_HostAddress}}/weatherforecast/
 Accept: application/json
