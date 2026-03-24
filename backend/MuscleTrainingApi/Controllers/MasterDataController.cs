@@ -16,7 +16,7 @@ public class MasterDataController : ControllerBase {
         var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("SELECT * FROM Categories", conn);
+        using var cmd = new NpgsqlCommand("SELECT * FROM \"Categories\"", conn);
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             categories.Add(new Category {
@@ -32,7 +32,7 @@ public class MasterDataController : ControllerBase {
         var exercises = new List<Exercise>();
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("SELECT * FROM Exercises", conn);
+        using var cmd = new NpgsqlCommand("SELECT * FROM \"Exercises\"", conn);
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             exercises.Add(new Exercise {
@@ -49,7 +49,7 @@ public class MasterDataController : ControllerBase {
     public async Task<IActionResult> AddCategory([FromBody] Category category) {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("INSERT INTO Categories (category_name) VALUES (@name)", conn);
+        using var cmd = new NpgsqlCommand("INSERT INTO \"Categories\" (\"Category_Name\") VALUES (@name)", conn);
         cmd.Parameters.AddWithValue("name", category.Category_Name);
         await cmd.ExecuteNonQueryAsync();
         return Ok();
@@ -60,7 +60,7 @@ public class MasterDataController : ControllerBase {
     public async Task<IActionResult> AddExercise([FromBody] Exercise exercise) {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("INSERT INTO Exercises (category_id, exercise_name) VALUES (@catId, @name)", conn);
+        using var cmd = new NpgsqlCommand("INSERT INTO \"Exercises\" (\"Category_Id\", \"Exercise_Name\") VALUES (@catId, @name)", conn);
         cmd.Parameters.AddWithValue("catId", exercise.Category_Id);
         cmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
         await cmd.ExecuteNonQueryAsync();
