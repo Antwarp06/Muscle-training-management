@@ -78,7 +78,7 @@ public class WorkoutsController : ControllerBase
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         //指定されたrecord_idの行を削除するSQL
-        using var cmd = new NpgsqlCommand("DELETE FROM \"Workout\" \"Record_Id\" = @id",conn);
+        using var cmd = new NpgsqlCommand("DELETE FROM \"Workout\"  WHERE \"Record_Id\" = @id",conn);
         cmd.Parameters.AddWithValue( "id",id );
         int affectedRows = await cmd.ExecuteNonQueryAsync();
 
