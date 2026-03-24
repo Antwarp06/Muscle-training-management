@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MuscleTrainingApi.Models;
 
-[Table("Workout")] 
+[Table("Workout", Schema = "public")] 
 public class Workout
 {
     [Key]

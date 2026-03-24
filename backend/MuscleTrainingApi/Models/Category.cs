@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MuscleTrainingApi.Models;
 
-[Table("Categories")] 
+[Table("Categories", Schema = "public")] 
 public class Category
 {
     [Key]
