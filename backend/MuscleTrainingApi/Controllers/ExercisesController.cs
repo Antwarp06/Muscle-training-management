@@ -8,7 +8,7 @@ namespace MuscleTrainingApi.Controllers;
 public class ExercisesController : ControllerBase{
     private readonly string _connectionString;
 
-    public ExercisesController(IConfigration configuration){
+    public ExercisesController(IConfiguration configuration){
         _connectionString = configuration.GetConnectionString("DefaultConnection")?? "";
     }
 
