@@ -1,118 +1,140 @@
 import React, { useState, useEffect } from 'react';
 
-// APIから返ってくるデータの型定義
+// 型定義
 interface Category {
     category_Id: number;
     category_Name: string;
 }
 
+interface Exercise {
+    exercise_Id: number;
+    exercise_Name: string;
+    category_Id: number;
+}
+
 const SettingsPage: React.FC = () => {
     const [categories, setCategories] = useState<Category[]>([]);
+    const [exercises, setExercises] = useState<Exercise[]>([]); // 全種目保持用
     const [newCategoryName, setNewCategoryName] = useState('');
-
     const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
     const [newExerciseName, setNewExerciseName] = useState('');
 
-// 1. 既存の部位を取得する関数
+    // --- 1. データ取得関数 ---
     const fetchCategories = async () => {
-        try {
         const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-        if (res.ok) {
-            const data = await res.json();
-            setCategories(data);
-        }
-    } catch (error) {
-        console.error("部位の取得に失敗しました", error);
-    }
-};
+        if (res.ok) setCategories(await res.json());
+    };
+
+    const fetchExercises = async () => {
+        // すべての種目を取得するAPI（MasterDataに全取得がある前提）
+        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
+        if (res.ok) setExercises(await res.json());
+    };
 
     useEffect(() => {
         fetchCategories();
+        fetchExercises();
     }, []);
 
-  // 2. 新しい部位を登録する処理
+    // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
         await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category_Name: newCategoryName })
-    });
-    
-    setNewCategoryName(''); // 入力欄を空にする
-    fetchCategories();      // 一覧を再取得
-    alert('部位を追加しました！');
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category_Name: newCategoryName })
+        });
+        setNewCategoryName('');
+        fetchCategories();
     };
 
-  // 3. 新しい種目を登録する処理
     const handleAddExercise = async () => {
-    if (!newExerciseName.trim() || selectedCategoryId === 0) {
-        alert('部位を選択し、種目名を入力してください');
-        return;
-    }
+        if (!newExerciseName.trim() || selectedCategoryId === 0) return;
+        await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
+        });
+        setNewExerciseName('');
+        fetchExercises();
+    };
 
-    await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            category_Id: selectedCategoryId, 
-            exercise_Name: newExerciseName 
-        })
-    });
+    // --- 3. 削除処理 (今回追加！) ---
+    const handleDeleteCategory = async (id: number) => {
+        if (!confirm("この部位を削除しますか？")) return;
+        const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
+        if (res.ok) fetchCategories();
+        else alert("紐づく種目があるため削除できません");
+    };
 
-    setNewExerciseName('');
-    alert('種目を登録しました！');
+    const handleDeleteExercise = async (id: number) => {
+        if (!confirm("この種目を削除しますか？")) return;
+        const res = await fetch(`https://muscle-training-management.onrender.com/api/Exercises/${id}`, { method: 'DELETE' });
+        if (res.ok) fetchExercises();
+        else alert("記録が存在するため削除できません");
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        <h1>トレーニング設定</h1>
-        <p>自分が行う部位と種目を設定します。</p>
-        <hr style={{ margin: '20px 0' }} />
+        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+            <h1>トレーニング設定</h1>
+            <p>部位と種目の登録・管理を行います。</p>
+            <hr />
 
-      {/* --- 部位登録セクション --- */}
-    <section style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-        <h3>1. 新しい部位を追加する</h3>
-        <div style={{ display: 'flex', gap: '10px' }}>
-            <input 
-            type="text" 
-            placeholder="例：胸、脚、背中" 
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-            style={{ flex: 1, padding: '8px' }}
-            />
-            <button onClick={handleAddCategory} style={{ padding: '8px 16px', cursor: 'pointer' }}>登録</button>
-        </div>
-        </section>
+            {/* --- 登録セクション (既存) --- */}
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
+                <section style={{ flex: 1, backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
+                    <h3>部位追加</h3>
+                    <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} style={{ width: '70%', padding: '8px' }} />
+                    <button onClick={handleAddCategory}>登録</button>
+                </section>
 
-      {/* --- 種目登録セクション --- */}
-        <section style={{ backgroundColor: '#f0f7ff', padding: '15px', borderRadius: '8px' }}>
-        <h3>2. 部位に種目（ワークアウト）を追加する</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <select 
-            value={selectedCategoryId} 
-            onChange={(e) => setSelectedCategoryId(Number(e.target.value))}
-            style={{ padding: '8px' }}>
-            <option value="0">▼ 追加先の部位を選択してください</option>
-            {categories.map(cat => (
-                <option key={cat.category_Id} value={cat.category_Id}>{cat.category_Name}</option>
-            ))}
-        </select>
-        <div style={{ display: 'flex', gap: '10px' }}>
-            <input 
-            type="text" 
-            placeholder="例：ベンチプレス、スクワット" 
-            value={newExerciseName}
-            onChange={(e) => setNewExerciseName(e.target.value)}
-            style={{ flex: 1, padding: '8px' }}/>
-            <button onClick={handleAddExercise} style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>
-            種目を追加
-            </button>
+                <section style={{ flex: 1, backgroundColor: '#f0f7ff', padding: '15px', borderRadius: '8px' }}>
+                    <h3>種目追加</h3>
+                    <select value={selectedCategoryId} onChange={e => setSelectedCategoryId(Number(e.target.value))} style={{ width: '100%', marginBottom: '10px' }}>
+                        <option value="0">部位を選択</option>
+                        {categories.map(cat => <option key={cat.category_Id} value={cat.category_Id}>{cat.category_Name}</option>)}
+                    </select>
+                    <input type="text" value={newExerciseName} onChange={e => setNewExerciseName(e.target.value)} style={{ width: '70%', padding: '8px' }} />
+                    <button onClick={handleAddExercise}>登録</button>
+                </section>
+            </div>
+
+            <hr />
+
+            {/* --- 4. 管理・削除セクション (今回追加！) --- */}
+            <div style={{ display: 'flex', gap: '20px' }}>
+                {/* 部位一覧 */}
+                <div style={{ flex: 1 }}>
+                    <h4>登録済みの部位</h4>
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {categories.map(cat => (
+                            <li key={cat.category_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
+                                {cat.category_Name}
+                                <button onClick={() => handleDeleteCategory(cat.category_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* 種目一覧 */}
+                <div style={{ flex: 1 }}>
+                    <h4>登録済みの種目</h4>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <ul style={{ listStyle: 'none', padding: 0 }}>
+                            {exercises.map(ex => (
+                                <li key={ex.exercise_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
+                                    <span>
+                                        <small style={{ color: '#666' }}>[{categories.find(c => c.category_Id === ex.category_Id)?.category_Name}]</small> {ex.exercise_Name}
+                                    </span>
+                                    <button onClick={() => handleDeleteExercise(ex.exercise_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-        </div>
-    </section>
-    </div>
-);
+    );
 };
 
 export default SettingsPage;
