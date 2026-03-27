@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
-namespace MuscleApp.Controllers;
+namespace MuscleTrainingApi.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 public class CategoriesController : ControllerBase{
