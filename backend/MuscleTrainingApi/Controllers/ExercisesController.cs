@@ -26,7 +26,7 @@ public class ExercisesController : ControllerBase{
 
             return Ok(new {message = "種目を削除しました"});
         }
-        catch (PostgreException ex) when (ex.SqlState == "23503"){
+        catch (PostgresException ex) when (ex.SqlState == "23503"){
             return BadRequest(new {message = "この種目のトレーニング記録が存在するため削除できません。"});
         }
     }
