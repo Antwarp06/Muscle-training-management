@@ -12,7 +12,7 @@ public class ExercisesController : ControllerBase{
         _connectionString = configuration.GetConnectionString("DefaultConnection")?? "";
     }
 
-    [HttpDelete({"id"})]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delte(int id){
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();

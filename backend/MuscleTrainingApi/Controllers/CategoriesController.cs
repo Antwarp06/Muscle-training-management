@@ -26,7 +26,7 @@ namespace MuscleApp.Controllers{
                 return Ok(new { message = "部位を削除しました"});
             } 
             catch (PostgresException ex) when (ex.SqlState == "23503"){
-                return BadRequest(new { message = "この部位に紐づく種目が存在するため削除できません"})
+                return BadRequest(new { message = "この部位に紐づく種目が存在するため削除できません"});
             }
         }
     }
