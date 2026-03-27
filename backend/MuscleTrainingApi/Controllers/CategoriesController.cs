@@ -4,7 +4,7 @@ using Npgsql;
 namespace MuscleApp.Controllers;
 [Route("api/[controller]")]
 [ApiController]
-public class Category : ControllerBase{
+public class CategoriesController : ControllerBase{
     private readonly string _connectionString;
 
     public CategoriesController(IConfiguration configuration){
