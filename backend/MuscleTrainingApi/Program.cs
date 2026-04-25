@@ -32,6 +32,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
+
 // 【CORSの適用】フロントエンド（Reactなど）からのアクセスを許可する
 app.UseCors("AllowAll");
 

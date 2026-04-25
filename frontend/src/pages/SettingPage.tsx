@@ -124,7 +124,7 @@ const SettingsPage: React.FC = () => {
                             {exercises.map(ex => (
                                 <li key={ex.exercise_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
                                     <span>
-                                        <small style={{ color: '#666' }}>[{categories.find(c => c.category_Id === ex.category_Id)?.category_Name}]</small> {ex.exercise_Name}
+                                        <small style={{ color: '#666' }}>[{categories.find(c => c.category_Id === ex.category_Id)?.category_Name || "未分類"}]</small> {ex.exercise_Name}
                                     </span>
                                     <button onClick={() => handleDeleteExercise(ex.exercise_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
                                 </li>

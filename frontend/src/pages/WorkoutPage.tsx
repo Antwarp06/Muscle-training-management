@@ -94,7 +94,7 @@ const WorkoutPage = () => {
                         value={ selectedExId }
                         onChange={(e)=> setSelectedExId(Number(e.target.value))}>
                             <option value="0">種目を選択してください</option>
-                            {filteredExercises.map(ex => (<option key={ex.exercise_Id}>{ex.exercise_Name}</option>))}
+                            {filteredExercises.map(ex => (<option key={ex.exercise_Id} value={ex.category_Id}>{ex.exercise_Name}</option>))}
                         </select>
                     </div>
                     {/* 重量・回数 */}

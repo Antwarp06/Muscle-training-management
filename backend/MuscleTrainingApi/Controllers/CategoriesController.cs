@@ -17,7 +17,7 @@ public class CategoriesController : ControllerBase{
         await conn.OpenAsync();
 
         try{
-            using var cmd = new NpgsqlCommand("DELLETE FROM \"Categories\" WHER \"Category_Id\" = @id", conn);
+            using var cmd = new NpgsqlCommand("DELETE FROM \"Categories\" WHERE \"Category_Id\" = @id", conn);
             cmd.Parameters.AddWithValue("id",id);
 
             int affectedRows = await cmd.ExecuteNonQueryAsync();
