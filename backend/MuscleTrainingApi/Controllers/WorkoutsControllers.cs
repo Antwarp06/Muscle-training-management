@@ -4,7 +4,7 @@ using MuscleTrainingApi.Models;
 
 namespace MuscleTrainingApi.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/Workouts")]
 [ApiController]
 public class WorkoutsController : ControllerBase
 {

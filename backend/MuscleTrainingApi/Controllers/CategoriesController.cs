@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
 namespace MuscleTrainingApi.Controllers;
-[Route("api/[controller]")]
+[Route("api/Categories")]
 [ApiController]
 public class CategoriesController : ControllerBase{
     private readonly string _connectionString;

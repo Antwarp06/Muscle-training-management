@@ -3,7 +3,7 @@ using Npgsql;
 
 namespace MuscleTrainingApi.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/[Exercises]")]
 [ApiController]
 public class ExercisesController : ControllerBase{
     private readonly string _connectionString;
