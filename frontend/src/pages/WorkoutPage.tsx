@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// 型定義（DBの構造に合わせる）
+// 型定義
 interface Category { category_Id: number; category_Name: string; }
 interface Exercise { exercise_Id: number; category_Id: number; exercise_Name: string; }
 interface WorkoutRecord { record_Id: number; exercise_Name: string; weight: number; reps: number; }
@@ -10,6 +10,7 @@ const WorkoutPage = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [history, setHistory] = useState<WorkoutRecord[]>([]);
+    const [isLoading, setIsLoading] = useState(false); 
 
     // 選択状態管理
     const [selectedCatId, setSelectedCatId] = useState<number>(0);
@@ -17,25 +18,34 @@ const WorkoutPage = () => {
     const [weight, setWeight] = useState<number | string>('');
     const [reps, setReps] = useState<number | string>('');
 
-    // 1. データの取得（マスターデータと履歴）
+    // --- 1. データの取得（1つずつ確実に直列処理） ---
     const loadAllData = async () => {
+        if (isLoading) return; 
+
+        setIsLoading(true);
         try {
+            // ① categories の取得（末尾小文字）
             const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
             if (catRes.ok) setCategories(await catRes.json());
 
+            // ② exercises の取得（末尾小文字に完全統一）
             const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
             if (exRes.ok) setExercises(await exRes.json());
 
+            // ③ 履歴の取得（Wは大文字）
             const historyRes = await fetch('https://muscle-training-management.onrender.com/api/Workouts');
             if (historyRes.ok) setHistory(await historyRes.json());
+
         } catch (error) {
-        console.error("データ取得失敗:", error);
-        };
+            console.error("データ取得失敗:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => { loadAllData(); }, []);
 
-    // 2. 保存処理（IDを送信する）
+    // --- 2. 保存処理 ---
     const handleSave = async () => {
         if (selectedExId === 0 || !weight || !reps) {
             alert("種目、重量、回数を入力してください");
@@ -43,7 +53,7 @@ const WorkoutPage = () => {
         }
 
         const body = {
-            exercise_Id: selectedExId, // 数字のIDを送る
+            exercise_Id: selectedExId,
             weight: Number(weight),
             reps: Number(reps)
         };
@@ -59,6 +69,7 @@ const WorkoutPage = () => {
         loadAllData(); // リストを更新
     };
 
+    // --- 3. 削除処理 ---
     const handkeDelete = async ( recordId: number ) => {
         if(!confirm("本当に削除しますか？")) return;
         await fetch(`https://muscle-training-management.onrender.com/api/Workouts/${recordId}`,{ method: 'DELETE'});
@@ -69,38 +80,48 @@ const WorkoutPage = () => {
     // 現在選択されている部位に属する種目だけを抽出
     const filteredExercises = exercises.filter(ex => ex.category_Id === selectedCatId);
 
+    // サーバ起動中のロード画面
+    if (isLoading && categories.length === 0) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <div style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid #3498db', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px' }}></div>
+                <h2>データを読み込んでいます...</h2>
+                <style>{' @keyframes spin{ 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} } '}</style>
+            </div>
+        );
+    }
+
     return (
         <div style={{ padding: '20px',maxWidth: '1200px',margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid #eee',paddingBottom: '10px' }}>トレーニング記録</h2>
 
-            {/* 分割コンテナ*/}
             <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start'}}>
                 {/*入力エリア*/}
                 <div style={{ flex: '0 0 350px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0.1)' }}>
                     <h3 style={{ marginTop: 0, fontSize: '1.2rem', color: '#333' }}>新規記録入力</h3>
-                    {/*部位選択*/}
+                    
                     <div style={{ marginBottom: '15px'}}>
                         <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px'}}>部位</label>
                         <select
-                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border:'1px solid #ddd' }}
-                        value={ selectedCatId }
-                        onChange={(e) => {setSelectedCatId(Number(e.target.value)); setSelectedExId(0);}}>
+                            style={{ width: '100%', padding: '10px', borderRadius: '4px', border:'1px solid #ddd' }}
+                            value={ selectedCatId }
+                            onChange={(e) => {setSelectedCatId(Number(e.target.value)); setSelectedExId(0);}}>
                             <option value="0">部位を選択してください</option>
                             {categories.map(cat => (<option key={cat.category_Id} value={cat.category_Id}>{cat.category_Name}</option>))}
                         </select>
                     </div>
-                    {/*種目の選択 */}
+
                     <div style={{ marginBottom: '15px'}}>
                         <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px'}}>種目</label>
                         <select
-                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border:'1px solid #ddd' }}
-                        value={ selectedExId }
-                        onChange={(e)=> setSelectedExId(Number(e.target.value))}>
+                            style={{ width: '100%', padding: '10px', borderRadius: '4px', border:'1px solid #ddd' }}
+                            value={ selectedExId }
+                            onChange={(e)=> setSelectedExId(Number(e.target.value))}>
                             <option value="0">種目を選択してください</option>
                             {filteredExercises.map(ex => (<option key={ex.exercise_Id} value={ex.exercise_Id}>{ex.exercise_Name}</option>))}
                         </select>
                     </div>
-                    {/* 重量・回数 */}
+
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '20px'}}>
                         <div style={{ flex: 1}}>
                             <label style={{ display: 'block',fontSize: '0.8rem', fontWeight: 'bold'}}>重量(kg)</label>
@@ -108,14 +129,15 @@ const WorkoutPage = () => {
                         </div>
                         <div style={{flex: 1}}>
                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold'}}>回数(回)</label>
-                            <input type="number" style={{ width: '100%', padding: '10px', boxSizing: 'border-box'}} value={reps} onChange={e => setReps(e.target.value)}/>
+                            <input type="number" style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }} value={reps} onChange={e => setReps(e.target.value)}/>
                         </div>
                     </div>
-                    <button onClick={handleSave} style={{width: '100%', padding: '12px', backgroundColor: '#28a745', color: '#fff', border: 'none', 
-                    borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'}}>
+                    
+                    <button onClick={handleSave} style={{width: '100%', padding: '12px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'}}>
                         保存
                     </button>
                 </div>
+
                 {/* 右側:履歴エリア */}
                 <div style={{ flex: '1'}}>
                     <h3 style={{ marginTop: 0, fontSize: '1.2rem', color: '#333'}}>本日の記録</h3>
@@ -137,12 +159,12 @@ const WorkoutPage = () => {
                                         <td style={{ padding: '12px' }}>{h.reps}回</td>
                                         <td style={{ padding: '12px', textAlign: 'center'}}>
                                             <button
-                                            onClick={() => handkeDelete(h.record_Id)}
-                                            style={{ backgroundColor: 'transparent', color: '#dc3545', border: '1px solid #dc3545', borderRadius: '4px', 
-                                            cursor: 'pointer', padding: '5px 10px', transition: '0.2s'}}
-                                            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#dc3545', e.currentTarget.style.color = 'white')}
-                                            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent', e.currentTarget.style.color = '#dc3545')}>
-                                            削除</button>
+                                                onClick={() => handkeDelete(h.record_Id)}
+                                                style={{ backgroundColor: 'transparent', color: '#dc3545', border: '1px solid #dc3545', borderRadius: '4px', cursor: 'pointer', padding: '5px 10px', transition: '0.2s'}}
+                                                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#dc3545', e.currentTarget.style.color = 'white')}
+                                                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent', e.currentTarget.style.color = '#dc3545')}>
+                                                削除
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
