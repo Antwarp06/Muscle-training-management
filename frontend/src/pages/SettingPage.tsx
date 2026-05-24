@@ -25,8 +25,8 @@ const SettingsPage: React.FC = () => {
         setIsLoading(true);
         try {
             const [catRes, exRes] = await Promise.all([
-                fetch('https://muscle-training-management.onrender.com/api/MasterData/Categories'),
-                fetch('https://muscle-training-management.onrender.com/api/MasterData/Exercises')
+                fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
+                fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
             ]);
 
             if (catRes.ok) setCategories(await catRes.json());

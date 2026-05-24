@@ -11,7 +11,7 @@ public class MasterDataController : ControllerBase {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
     }
 
-    [HttpGet("Categories")]
+    [HttpGet("eategories")]
     public async Task<ActionResult<IEnumerable<Category>>> GetCategories() {
         var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -27,7 +27,7 @@ public class MasterDataController : ControllerBase {
         return categories;
     }
 
-    [HttpGet("Exercises")]
+    [HttpGet("exercises")]
     public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises() {
         var exercises = new List<Exercise>();
         using var conn = new NpgsqlConnection(_connectionString);
