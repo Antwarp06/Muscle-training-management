@@ -22,6 +22,9 @@ const SettingsPage: React.FC = () => {
 
     // --- 1. データ取得関数 ---
     const fetchData = async () => {
+
+        if (isLoading) return;
+
         setIsLoading(true);
         try {
             // 1. 部位データの取得
