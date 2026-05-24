@@ -20,13 +20,13 @@ const WorkoutPage = () => {
     // 1. データの取得（マスターデータと履歴）
     const loadAllData = async () => {
         try {
-            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
+            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/ategories');
             if (catRes.ok) setCategories(await catRes.json());
 
-            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
+            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/Exercises');
             if (exRes.ok) setExercises(await exRes.json());
 
-            const historyRes = await fetch('https://muscle-training-management.onrender.com/api/workouts');
+            const historyRes = await fetch('https://muscle-training-management.onrender.com/api/Workouts');
             if (historyRes.ok) setHistory(await historyRes.json());
         } catch (error) {
         console.error("データ取得失敗:", error);
@@ -48,7 +48,7 @@ const WorkoutPage = () => {
             reps: Number(reps)
         };
 
-        await fetch('https://muscle-training-management.onrender.com/api/workouts', {
+        await fetch('https://muscle-training-management.onrender.com/api/Workouts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
