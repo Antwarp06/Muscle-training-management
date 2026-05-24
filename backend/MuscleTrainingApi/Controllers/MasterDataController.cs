@@ -20,7 +20,7 @@ public class MasterDataController : ControllerBase {
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             categories.Add(new Category {
-                Category_Id = reader.GetInt32(0),
+                Category_Id = Convert.ToInt32(reader.GetValue(0)),
                 Category_Name = reader.GetString(1)
             });
         }
@@ -37,8 +37,8 @@ public class MasterDataController : ControllerBase {
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             exercises.Add(new Exercise {
-                Exercise_Id = reader.GetInt32(0),
-                Category_Id = reader.GetInt32(1),
+                Exercise_Id = Convert.ToInt32(reader.GetValue(0)),
+                Category_Id = Convert.ToInt32(reader.GetValue(1)),
                 Exercise_Name = reader.GetString(2)
             });
         }
