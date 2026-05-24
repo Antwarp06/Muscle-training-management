@@ -24,13 +24,13 @@ const SettingsPage: React.FC = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [catRes, exRes] = await Promise.all([
-                fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
-                fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
-            ]);
-
+            // ⭕ Promise.all をやめて、1つずつ順番に取得する（サーバーの負荷を優しく分散）
+            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
             if (catRes.ok) setCategories(await catRes.json());
+
+            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
             if (exRes.ok) setExercises(await exRes.json());
+
         } catch (error) {
             console.error("通信失敗", error);
             alert("データの取得に失敗しました。再度読込してください。");
