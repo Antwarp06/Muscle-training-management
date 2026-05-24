@@ -32,7 +32,8 @@ public class MasterDataController : ControllerBase {
         var exercises = new List<Exercise>();
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("SELECT * FROM \"Exercises\"", conn);
+        string sql = "SELECT \"Exercise_Id\", \"Category_Id\", \"Exercise_Name\" FROM \"Exercises\"";
+        using var cmd = new NpgsqlCommand(sql, conn);
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             exercises.Add(new Exercise {
