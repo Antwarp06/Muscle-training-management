@@ -24,7 +24,7 @@ public class MasterDataController : ControllerBase {
                 Category_Name = reader.GetString(1)
             });
         }
-        return OK(categories);
+        return Ok(categories);
     }
 
     [HttpGet("exercises")]
@@ -42,7 +42,7 @@ public class MasterDataController : ControllerBase {
                 Exercise_Name = reader.GetString(2)
             });
         }
-        return OK(exercises);
+        return Ok(exercises);
     }
 
     // --- 部位の追加 ---
