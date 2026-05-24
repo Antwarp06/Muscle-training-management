@@ -8,7 +8,11 @@ var connectionString = builder.Configuration.GetConnectionString( "DefaultConnec
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
 // APIコントローラーを有効にする
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 // APIコントローラーを有効にする
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
