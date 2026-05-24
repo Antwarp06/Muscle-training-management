@@ -14,28 +14,62 @@ interface Exercise {
 
 const SettingsPage: React.FC = () => {
     const [categories, setCategories] = useState<Category[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]); // 全種目保持用
+    const [exercises, setExercises] = useState<Exercise[]>([]); 
+    const [isLoading, setIsLoading] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
     const [newExerciseName, setNewExerciseName] = useState('');
 
     // --- 1. データ取得関数 ---
-    const fetchCategories = async () => {
-        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-        if (res.ok) setCategories(await res.json());
-    };
+    const fetchData = async () => {
+        setIsLoading(true);
+        try{
+            const [catRes, exRes] = await Promise.all([
+                fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
+                fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
+            ]);
 
-    const fetchExercises = async () => {
-        // すべての種目を取得するAPI（MasterDataに全取得がある前提）
-        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
-        if (res.ok) setExercises(await res.json());
+            if(catRes.ok) setCategories(await catRes.json());
+            if(exRes.ok) setExercises(await exRes.json());
+        } catch (error) {
+            console.error("通信失敗", error);
+            alert("データの取得に失敗しました。再度読込してください。");
+        } finally {
+            setIsLoading(false);
+        }
+        
     };
 
     useEffect(() => {
-        fetchCategories();
-        fetchExercises();
+        fetchData();
     }, []);
 
+    if (isLoading){
+        return(
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                textAlign: 'center'
+            }}>
+                {/*スピナー*/}
+                <div className="spinner" style={{
+                    width: '50px',
+                    height: '50px',
+                    border: '5px solid #f3f3f3',
+                    borderTop: '5px solid #3498db',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginBottom: '20px'
+                }}></div>
+                <h2>サーバを起動しています...</h2>
+                <p>無料サーバーを使用しているため、起動に最大1分ほどかかる場合があります。</p>
+                <style>{' @keyframes spin{ 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} } '}</style>
+            </div>
+        );
+    }
     // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
@@ -45,7 +79,7 @@ const SettingsPage: React.FC = () => {
             body: JSON.stringify({ category_Name: newCategoryName })
         });
         setNewCategoryName('');
-        fetchCategories();
+        fetchData();
     };
 
     const handleAddExercise = async () => {
@@ -56,21 +90,21 @@ const SettingsPage: React.FC = () => {
             body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
         });
         setNewExerciseName('');
-        fetchExercises();
+        fetchData();
     };
 
     // --- 3. 削除処理 (今回追加！) ---
     const handleDeleteCategory = async (id: number) => {
         if (!confirm("この部位を削除しますか？")) return;
         const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
-        if (res.ok) fetchCategories();
+        if (res.ok) fetchData();
         else alert("紐づく種目があるため削除できません");
     };
 
     const handleDeleteExercise = async (id: number) => {
         if (!confirm("この種目を削除しますか？")) return;
         const res = await fetch(`https://muscle-training-management.onrender.com/api/Exercises/${id}`, { method: 'DELETE' });
-        if (res.ok) fetchExercises();
+        if (res.ok) fetchData();
         else alert("記録が存在するため削除できません");
     };
 
