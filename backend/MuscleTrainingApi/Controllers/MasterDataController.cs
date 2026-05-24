@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using MuscleTrainingApi.Models;
 
-[Route("api/[controller]")]
+[Route("api/MasterData")]
 [ApiController]
 public class MasterDataController : ControllerBase {
     private readonly string _connectionString;
@@ -11,7 +11,7 @@ public class MasterDataController : ControllerBase {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
     }
 
-    [HttpGet("eategories")]
+    [HttpGet("categories")]
     public async Task<ActionResult<IEnumerable<Category>>> GetCategories() {
         var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -46,7 +46,7 @@ public class MasterDataController : ControllerBase {
     }
 
     // --- 部位の追加 ---
-    [HttpPost("Categories")]
+    [HttpPost("categories")]
     public async Task<IActionResult> AddCategory([FromBody] Category category) {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
@@ -57,7 +57,7 @@ public class MasterDataController : ControllerBase {
     }
 
 // --- 種目の追加 ---
-    [HttpPost("Exercises")]
+    [HttpPost("exercises")]
     public async Task<IActionResult> AddExercise([FromBody] Exercise exercise) {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
