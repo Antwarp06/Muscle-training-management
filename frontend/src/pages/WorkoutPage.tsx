@@ -20,7 +20,7 @@ const WorkoutPage = () => {
     // 1. データの取得（マスターデータと履歴）
     const loadAllData = async () => {
         try {
-            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/ategories');
+            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/Categories');
             if (catRes.ok) setCategories(await catRes.json());
 
             const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/Exercises');

@@ -11,7 +11,7 @@ public class MasterDataController : ControllerBase {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
     }
 
-    [HttpGet("categories")]
+    [HttpGet("Categories")]
     public async Task<ActionResult<IEnumerable<Category>>> GetCategories() {
         var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -27,7 +27,7 @@ public class MasterDataController : ControllerBase {
         return categories;
     }
 
-    [HttpGet("exercises")]
+    [HttpGet("Exercises")]
     public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises() {
         var exercises = new List<Exercise>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -45,7 +45,7 @@ public class MasterDataController : ControllerBase {
     }
 
     // --- 部位の追加 ---
-    [HttpPost("categories")]
+    [HttpPost("Categories")]
     public async Task<IActionResult> AddCategory([FromBody] Category category) {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
@@ -56,7 +56,7 @@ public class MasterDataController : ControllerBase {
     }
 
 // --- 種目の追加 ---
-    [HttpPost("exercises")]
+    [HttpPost("Exercises")]
     public async Task<IActionResult> AddExercise([FromBody] Exercise exercise) {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
