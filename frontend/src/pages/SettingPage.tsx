@@ -23,29 +23,29 @@ const SettingsPage: React.FC = () => {
     // --- 1. データ取得関数 ---
     const fetchData = async () => {
         setIsLoading(true);
-        try{
+        try {
             const [catRes, exRes] = await Promise.all([
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
             ]);
 
-            if(catRes.ok) setCategories(await catRes.json());
-            if(exRes.ok) setExercises(await exRes.json());
+            if (catRes.ok) setCategories(await catRes.json());
+            if (exRes.ok) setExercises(await exRes.json());
         } catch (error) {
             console.error("通信失敗", error);
             alert("データの取得に失敗しました。再度読込してください。");
         } finally {
             setIsLoading(false);
         }
-        
     };
 
     useEffect(() => {
         fetchData();
     }, []);
 
-    if (isLoading){
-        return(
+    // --- ロード画面表示 ---
+    if (isLoading) {
+        return (
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -54,7 +54,7 @@ const SettingsPage: React.FC = () => {
                 height: '100vh',
                 textAlign: 'center'
             }}>
-                {/*スピナー*/}
+                {/* スピナー (is から 1s に修正) */}
                 <div className="spinner" style={{
                     width: '50px',
                     height: '50px',
@@ -66,10 +66,12 @@ const SettingsPage: React.FC = () => {
                 }}></div>
                 <h2>サーバを起動しています...</h2>
                 <p>無料サーバーを使用しているため、起動に最大1分ほどかかる場合があります。</p>
+                {/* キーフレームの transfrom を transform に修正 */}
                 <style>{' @keyframes spin{ 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} } '}</style>
             </div>
         );
     }
+
     // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
@@ -93,7 +95,7 @@ const SettingsPage: React.FC = () => {
         fetchData();
     };
 
-    // --- 3. 削除処理 (今回追加！) ---
+    // --- 3. 削除処理 ---
     const handleDeleteCategory = async (id: number) => {
         if (!confirm("この部位を削除しますか？")) return;
         const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
@@ -135,7 +137,7 @@ const SettingsPage: React.FC = () => {
 
             <hr />
 
-            {/* --- 4. 管理・削除セクション (今回追加！) --- */}
+            {/* --- 4. 管理・削除セクション --- */}
             <div style={{ display: 'flex', gap: '20px' }}>
                 {/* 部位一覧 */}
                 <div style={{ flex: 1 }}>

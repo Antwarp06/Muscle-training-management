@@ -19,15 +19,18 @@ const WorkoutPage = () => {
 
     // 1. データの取得（マスターデータと履歴）
     const loadAllData = async () => {
-        const [catRes, exRes, historyRes] = await Promise.all([
-            fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
-            fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises'),
-            fetch('https://muscle-training-management.onrender.com/api/workouts') // 履歴取得用
-        ]);
+        try {
+            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
+            if (catRes.ok) setCategories(await catRes.json());
 
-        setCategories(await catRes.json());
-        setExercises(await exRes.json());
-        setHistory(await historyRes.json());
+            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
+            if (exRes.ok) setExercises(await exRes.json());
+
+            const historyRes = await fetch('https://muscle-training-management.onrender.com/api/workouts');
+            if (historyRes.ok) setHistory(await historyRes.json());
+        } catch (error) {
+        console.error("データ取得失敗:", error);
+        };
     };
 
     useEffect(() => { loadAllData(); }, []);
@@ -94,7 +97,7 @@ const WorkoutPage = () => {
                         value={ selectedExId }
                         onChange={(e)=> setSelectedExId(Number(e.target.value))}>
                             <option value="0">種目を選択してください</option>
-                            {filteredExercises.map(ex => (<option key={ex.exercise_Id} value={ex.category_Id}>{ex.exercise_Name}</option>))}
+                            {filteredExercises.map(ex => (<option key={ex.exercise_Id} value={ex.exercise_Id}>{ex.exercise_Name}</option>))}
                         </select>
                     </div>
                     {/* 重量・回数 */}
