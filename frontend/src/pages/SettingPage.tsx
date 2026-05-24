@@ -24,21 +24,32 @@ const SettingsPage: React.FC = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            // ⭕ Promise.all をやめて、1つずつ順番に取得する（サーバーの負荷を優しく分散）
+            // 1. 部位データの取得
             const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-            if (catRes.ok) setCategories(await catRes.json());
+            if (!catRes.ok) {
+                throw new Error("Categoriesの取得に失敗しました");
+            }
+            const catData = await catRes.json();
+            setCategories(catData);
 
+            // 2. 種目データの取得
             const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
-            if (exRes.ok) setExercises(await exRes.json());
+            if (!exRes.ok) {
+                throw new Error("Exercisesの取得に失敗しました");
+            }
+            const exData = await exRes.json();
+            setExercises(exData);
 
         } catch (error) {
-            console.error("通信失敗", error);
-            alert("データの取得に失敗しました。再度読込してください。");
+            console.error("通信の裏側でエラーを検知:", error);
+            
+            if (categories.length === 0 && exercises.length === 0) {
+                alert("データの取得に失敗しました。再度読込してください。");
+            }
         } finally {
             setIsLoading(false);
         }
     };
-
     useEffect(() => {
         fetchData();
     }, []);
@@ -75,7 +86,7 @@ const SettingsPage: React.FC = () => {
     // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
-        await fetch('https://muscle-training-management.onrender.com/api/MasterData/Categories', {
+        await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_Name: newCategoryName })
@@ -86,7 +97,7 @@ const SettingsPage: React.FC = () => {
 
     const handleAddExercise = async () => {
         if (!newExerciseName.trim() || selectedCategoryId === 0) return;
-        await fetch('https://muscle-training-management.onrender.com/api/MasterData/Exercises', {
+        await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
