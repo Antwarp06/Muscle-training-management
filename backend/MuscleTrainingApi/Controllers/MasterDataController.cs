@@ -16,7 +16,7 @@ public class MasterDataController : ControllerBase {
         var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("SELECT \"Category_id\", \"Category_Name\" FROM \"Categories\"", conn);
+        using var cmd = new NpgsqlCommand("SELECT * FROM \"Categories\"", conn);
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             categories.Add(new Category {
@@ -32,7 +32,7 @@ public class MasterDataController : ControllerBase {
         var exercises = new List<Exercise>();
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        string sql = "SELECT \"Exercise_id\", \"Category_id\", \"Exercise_Name\" FROM \"Exercises\"";
+        string sql = "SELECT \"Exercise_Id\", \"Category_Id\", \"Exercise_Name\" FROM \"Exercises\"";
         using var cmd = new NpgsqlCommand(sql, conn);
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
