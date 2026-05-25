@@ -7,10 +7,10 @@ namespace MuscleTrainingApi.Models;
 public class Exercise 
 {
     [Key]
-    [Column("Exercise_Id")] 
+    [Column("Exercise_id")] 
     public int Exercise_Id { get; set; }
 
-    [Column("Category_Id")] 
+    [Column("Category_id")] 
     public int Category_Id { get; set; }
 
     [Column("Exercise_Name")] 
