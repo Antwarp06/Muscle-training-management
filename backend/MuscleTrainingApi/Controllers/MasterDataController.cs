@@ -14,35 +14,57 @@ public class MasterDataController : ControllerBase {
     [HttpGet("categories")]
     public async Task<ActionResult<IEnumerable<Category>>> GetCategories() {
         var categories = new List<Category>();
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand("SELECT * FROM \"Categories\"", conn);
-        using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
-            categories.Add(new Category {
-                Category_Id = Convert.ToInt32(reader.GetValue(0)),
-                Category_Name = reader.GetString(1)
-            });
+        try {
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            using var cmd = new NpgsqlCommand("SELECT * FROM \"Categories\"", conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) {
+                var rawCategoryId = reader.GetValue(0);
+                var rawCategoryName = reader.GetValue(1);
+
+                categories.Add(new Category {
+                    Category_Id = rawCategoryId != DBNull.Value ? Convert.ToInt32(rawCategoryId) : 0,
+                    Category_Name = rawCategoryName != DBNull.Value ? rawCategoryName.ToString() : ""
+                });
+            }
+            return Ok(categories);
         }
-        return Ok(categories);
+        catch (Exception ex) {
+            Console.WriteLine($"【Categories取得内部エラー】: {ex.Message}");
+            return Ok(new List<Category>());
+        }
     }
 
+// --- 種目一覧の取得 (GET) ---
     [HttpGet("exercises")]
     public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises() {
         var exercises = new List<Exercise>();
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        string sql = "SELECT \"Exercise_Id\", \"Category_Id\", \"Exercise_Name\" FROM \"Exercises\"";
-        using var cmd = new NpgsqlCommand(sql, conn);
-        using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
-            exercises.Add(new Exercise {
-                Exercise_Id = Convert.ToInt32(reader.GetValue(0)),
-                Category_Id = Convert.ToInt32(reader.GetValue(1)),
-                Exercise_Name = reader.GetString(2)
-            });
+        try {
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            
+            string sql = "SELECT * FROM \"Exercises\"";
+            using var cmd = new NpgsqlCommand(sql, conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync()) {
+                var rawExerciseId = reader.GetValue(0);
+                var rawCategoryId = reader.GetValue(1);
+                var rawExerciseName = reader.GetValue(2);
+
+                exercises.Add(new Exercise {
+                    Exercise_Id = rawExerciseId != DBNull.Value ? Convert.ToInt32(rawExerciseId) : 0,
+                    Category_Id = rawCategoryId != DBNull.Value ? Convert.ToInt32(rawCategoryId) : 0,
+                    Exercise_Name = rawExerciseName != DBNull.Value ? rawExerciseName.ToString() : ""
+                });
+            }
+            return Ok(exercises);
         }
-        return Ok(exercises);
+        catch (Exception ex) {
+            Console.WriteLine($"【Exercises取得内部エラー】: {ex.Message}");
+            return Ok(new List<Exercise>()); 
+        }
     }
 
     // --- 部位の追加 ---
