@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
-// 型定義
+// 型定義 (サーバー側が大文字・小文字どちらで返してきてもエラーにしないよう optional にします)
 interface Category {
-    category_Id: number;
-    category_Name: string;
+    category_Id?: number;
+    Category_Id?: number;
+    category_Name?: string;
+    Category_Name?: string;
 }
 
 interface Exercise {
-    exercise_Id: number;
-    exercise_Name: string;
-    category_Id: number;
+    exercise_Id?: number;
+    Exercise_Id?: number;
+    exercise_Name?: string;
+    Exercise_Name?: string;
+    category_Id?: number;
+    Category_Id?: number;
 }
 
 const SettingsPage: React.FC = () => {
@@ -22,9 +27,7 @@ const SettingsPage: React.FC = () => {
 
     // --- 1. データ取得関数 ---
     const fetchData = async () => {
-
         if (isLoading) return;
-
         setIsLoading(true);
         try {
             // 1. 部位データの取得
@@ -45,7 +48,6 @@ const SettingsPage: React.FC = () => {
 
         } catch (error) {
             console.error("通信の裏側でエラーを検知:", error);
-            
             if (categories.length === 0 && exercises.length === 0) {
                 alert("データの取得に失敗しました。再度読込してください。");
             }
@@ -53,6 +55,7 @@ const SettingsPage: React.FC = () => {
             setIsLoading(false);
         }
     };
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -60,27 +63,10 @@ const SettingsPage: React.FC = () => {
     // --- ロード画面表示 ---
     if (isLoading) {
         return (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100vh',
-                textAlign: 'center'
-            }}>
-                {/* スピナー (is から 1s に修正) */}
-                <div className="spinner" style={{
-                    width: '50px',
-                    height: '50px',
-                    border: '5px solid #f3f3f3',
-                    borderTop: '5px solid #3498db',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite',
-                    marginBottom: '20px'
-                }}></div>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', textAlign: 'center' }}>
+                <div className="spinner" style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid #3498db', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px' }}></div>
                 <h2>サーバを起動しています...</h2>
                 <p>無料サーバーを使用しているため、起動に最大1分ほどかかる場合があります。</p>
-                {/* キーフレームの transfrom を transform に修正 */}
                 <style>{' @keyframes spin{ 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} } '}</style>
             </div>
         );
@@ -130,7 +116,7 @@ const SettingsPage: React.FC = () => {
             <p>部位と種目の登録・管理を行います。</p>
             <hr />
 
-            {/* --- 登録セクション (既存) --- */}
+            {/* --- 登録セクション --- */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
                 <section style={{ flex: 1, backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
                     <h3>部位追加</h3>
@@ -142,7 +128,11 @@ const SettingsPage: React.FC = () => {
                     <h3>種目追加</h3>
                     <select value={selectedCategoryId} onChange={e => setSelectedCategoryId(Number(e.target.value))} style={{ width: '100%', marginBottom: '10px' }}>
                         <option value="0">部位を選択</option>
-                        {categories.map(cat => <option key={cat.category_Id} value={cat.category_Id}>{cat.category_Name}</option>)}
+                        {categories.map(cat => {
+                            const cId = cat.category_Id ?? cat.Category_Id ?? 0;
+                            const cName = cat.category_Name ?? cat.Category_Name ?? "";
+                            return <option key={cId} value={cId}>{cName}</option>;
+                        })}
                     </select>
                     <input type="text" value={newExerciseName} onChange={e => setNewExerciseName(e.target.value)} style={{ width: '70%', padding: '8px' }} />
                     <button onClick={handleAddExercise}>登録</button>
@@ -157,12 +147,16 @@ const SettingsPage: React.FC = () => {
                 <div style={{ flex: 1 }}>
                     <h4>登録済みの部位</h4>
                     <ul style={{ listStyle: 'none', padding: 0 }}>
-                        {categories.map(cat => (
-                            <li key={cat.category_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
-                                {cat.category_Name}
-                                <button onClick={() => handleDeleteCategory(cat.category_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
-                            </li>
-                        ))}
+                        {categories.map(cat => {
+                            const cId = cat.category_Id ?? cat.Category_Id ?? 0;
+                            const cName = cat.category_Name ?? cat.Category_Name ?? "";
+                            return (
+                                <li key={cId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
+                                    {cName}
+                                    <button onClick={() => handleDeleteCategory(cId)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
 
@@ -171,14 +165,26 @@ const SettingsPage: React.FC = () => {
                     <h4>登録済みの種目</h4>
                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         <ul style={{ listStyle: 'none', padding: 0 }}>
-                            {exercises.map(ex => (
-                                <li key={ex.exercise_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
-                                    <span>
-                                        <small style={{ color: '#666' }}>[{categories.find(c => c.category_Id === ex.category_Id)?.category_Name || "未分類"}]</small> {ex.exercise_Name}
-                                    </span>
-                                    <button onClick={() => handleDeleteExercise(ex.exercise_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
-                                </li>
-                            ))}
+                            {exercises.map(ex => {
+                                const eId = ex.exercise_Id ?? ex.Exercise_Id ?? 0;
+                                const eName = ex.exercise_Name ?? ex.Exercise_Name ?? "";
+                                const eCatId = ex.category_Id ?? ex.Category_Id ?? 0;
+
+                                const parentCategory = categories.find(c => {
+                                    const cId = c.category_Id ?? c.Category_Id ?? 0;
+                                    return cId === eCatId;
+                                });
+                                const parentName = parentCategory?.category_Name ?? parentCategory?.Category_Name ?? "未分類";
+
+                                return (
+                                    <li key={eId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
+                                        <span>
+                                            <small style={{ color: '#666' }}>[{parentName}]</small> {eName}
+                                        </span>
+                                        <button onClick={() => handleDeleteExercise(eId)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
                 </div>
