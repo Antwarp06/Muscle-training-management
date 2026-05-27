@@ -34,7 +34,9 @@ const SettingsPage: React.FC = () => {
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
             ]);
-
+            
+            console.log("🔥 現在届いている全部位データ:", catResult);
+            console.log("🔥 現在届いている全種目データ:", exResult);
             // 部位データの処理 (成功していれば中身を入れる)
             if (catResult.status === 'fulfilled' && catResult.value.ok) {
                 const catData = await catResult.value.json();
