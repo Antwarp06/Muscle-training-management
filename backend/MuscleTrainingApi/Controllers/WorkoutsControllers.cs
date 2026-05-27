@@ -62,13 +62,18 @@ public class WorkoutsController : ControllerBase
 
         while (await reader.ReadAsync())
         {
-            workouts.Add(new
             {
-                Record_Id = reader.GetInt32(0),
-                Exercise_Name = reader.GetString(1), // ここで「種目名」が入る
-                Weight = reader.GetDouble(2),
-                Reps = reader.GetInt32(3)
-            });
+                var rawRecordId = reader.GetValue(0);
+                var rawExerciseName = reader.GetValue(1);
+                var rawWeight = reader.GetValue(2);
+                var rawReps = reader.GetValue(3);
+                workouts.Add(new
+                {
+                    record_Id = rawRecordId != DBNull.Value ? Convert.ToInt32(rawRecordId) : 0,
+                    exercise_Name = rawExerciseName != DBNull.Value ? rawExerciseName.ToString() : "",
+                    weight = rawWeight != DBNull.Value ? Convert.ToDouble(rawWeight) : 0.0,
+                    reps = rawReps != DBNull.Value ? Convert.ToInt32(rawReps) : 0
+                });
         }
         return Ok(workouts);
     }
