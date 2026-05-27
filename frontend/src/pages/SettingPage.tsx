@@ -26,35 +26,35 @@ const SettingsPage: React.FC = () => {
     const [newExerciseName, setNewExerciseName] = useState('');
 
     // --- 1. データ取得関数 ---
+// --- 1. データ取得関数（完全開通版） ---
     const fetchData = async () => {
-        //if (isLoading) return; 問題がありそうな箇所をコメントアウト
         setIsLoading(true);
         try {
-            const [catResult, exResult] = await Promise.allSettled([
+            const [catRes, exRes] = await Promise.all([
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
             ]);
-            
-            console.log("🔥 現在届いている全部位データ:", catResult);
-            console.log("🔥 現在届いている全種目データ:", exResult);
-            // 部位データの処理 (成功していれば中身を入れる)
-            if (catResult.status === 'fulfilled' && catResult.value.ok) {
-                const catData = await catResult.value.json();
-                setCategories(catData);
-            } else {
-                console.error("部位の取得のみ失敗しました");
+            if (!catRes.ok || !exRes.ok) {
+                throw new Error("データの取得に失敗しました");
             }
-
-            // 種目データの処理 (成功していれば中身を入れる)
-            if (exResult.status === 'fulfilled' && exResult.value.ok) {
-                const exData = await exResult.value.json();
-                setExercises(exData);
-            } else {
-                console.error("種目の取得のみ失敗しました");
-            }
+            const [catData, exData] = await Promise.all([
+                catRes.json(),
+                exRes.json()
+            ]);
+            const cleanCategories = catData.map((c: any) => ({
+                category_Id: Number(c.category_Id ?? c.Category_Id) || 0,
+                category_Name: String(c.category_Name ?? c.Category_Name) || ""
+            }));
+            const cleanExercises = exData.map((e: any) => ({
+                exercise_Id: Number(e.exercise_Id ?? e.Exercise_Id) || 0,
+                exercise_Name: String(e.exercise_Name ?? e.Exercise_Name) || "",
+                category_Id: Number(e.category_Id ?? e.Category_Id) || 0
+            }));
+            setCategories(cleanCategories);
+            setExercises(cleanExercises);
 
         } catch (error) {
-            console.error("通信の根本で想定外のエラー:", error);
+            console.error("通信の裏側でエラーを検知:", error);
         } finally {
             setIsLoading(false);
         }
