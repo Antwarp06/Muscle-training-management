@@ -30,27 +30,29 @@ const SettingsPage: React.FC = () => {
         //if (isLoading) return; 問題がありそうな箇所をコメントアウト
         setIsLoading(true);
         try {
-            // 1. 部位データの取得
-            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-            if (!catRes.ok) {
-                throw new Error("Categoriesの取得に失敗しました");
-            }
-            const catData = await catRes.json();
-            setCategories(catData);
+            const [catResult, exResult] = await Promise.allSettled([
+                fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
+                fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
+            ]);
 
-            // 2. 種目データの取得
-            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
-            if (!exRes.ok) {
-                throw new Error("Exercisesの取得に失敗しました");
+            // 部位データの処理 (成功していれば中身を入れる)
+            if (catResult.status === 'fulfilled' && catResult.value.ok) {
+                const catData = await catResult.value.json();
+                setCategories(catData);
+            } else {
+                console.error("部位の取得のみ失敗しました");
             }
-            const exData = await exRes.json();
-            setExercises(exData);
+
+            // 種目データの処理 (成功していれば中身を入れる)
+            if (exResult.status === 'fulfilled' && exResult.value.ok) {
+                const exData = await exResult.value.json();
+                setExercises(exData);
+            } else {
+                console.error("種目の取得のみ失敗しました");
+            }
 
         } catch (error) {
-            console.error("通信の裏側でエラーを検知:", error);
-            if (categories.length === 0 && exercises.length === 0) {
-                alert("データの取得に失敗しました。再度読込してください。");
-            }
+            console.error("通信の根本で想定外のエラー:", error);
         } finally {
             setIsLoading(false);
         }
