@@ -20,7 +20,7 @@ const WorkoutPage = () => {
 
     // --- 1. データの取得（1つずつ確実に直列処理） ---
     const loadAllData = async () => {
-        if (isLoading) return; 
+        //if (isLoading) return; 
 
         setIsLoading(true);
         try {
