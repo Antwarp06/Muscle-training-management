@@ -78,7 +78,11 @@ const WorkoutPage = () => {
     };
 
     // 現在選択されている部位に属する種目だけを抽出
-    const filteredExercises = exercises.filter(ex => ex.category_Id === selectedCatId);
+    const filteredExercises = exercises.filter((ex) => {
+        const selectedId = Number(selectedCatId) || 0;
+        const exerciseCatId = Number(ex.category_Id) || 0;
+        return exerciseCatId === selectedId;
+    });
 
     // サーバ起動中のロード画面
     if (isLoading && categories.length === 0) {
