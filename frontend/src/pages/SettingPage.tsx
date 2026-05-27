@@ -25,11 +25,11 @@ const SettingsPage: React.FC = () => {
     const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
     const [newExerciseName, setNewExerciseName] = useState('');
 
-    // --- 1. データ取得関数 ---
-// --- 1. データ取得関数（完全開通版） ---
+// --- 1. データ取得関数---
     const fetchData = async () => {
         setIsLoading(true);
         try {
+            // 1. 同時並列で通信
             const [catRes, exRes] = await Promise.all([
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/categories'),
                 fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises')
@@ -37,10 +37,17 @@ const SettingsPage: React.FC = () => {
             if (!catRes.ok || !exRes.ok) {
                 throw new Error("データの取得に失敗しました");
             }
+            // 2. JSONデータの取り出し
             const [catData, exData] = await Promise.all([
                 catRes.json(),
                 exRes.json()
             ]);
+            // ========================================================
+            // 🔍 【ログ出力】ここでDBから届いた直後の「生データ」を覗き見します！
+            console.log("📦 [DBからの生データ] 部位:", catData);
+            console.log("📦 [DBからの生データ] 種目:", exData);
+            // ========================================================
+            // 3. データ型の保証
             const cleanCategories = catData.map((c: any) => ({
                 category_Id: Number(c.category_Id ?? c.Category_Id) || 0,
                 category_Name: String(c.category_Name ?? c.Category_Name) || ""
@@ -50,9 +57,9 @@ const SettingsPage: React.FC = () => {
                 exercise_Name: String(e.exercise_Name ?? e.Exercise_Name) || "",
                 category_Id: Number(e.category_Id ?? e.Category_Id) || 0
             }));
+            // 4. Stateへ同時に格納
             setCategories(cleanCategories);
             setExercises(cleanExercises);
-
         } catch (error) {
             console.error("通信の裏側でエラーを検知:", error);
         } finally {
