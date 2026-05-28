@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
 
-// 型定義
+// --- 型定義 ---
 interface Category { category_Id: number; category_Name: string; }
 interface Exercise { exercise_Id: number; category_Id: number; exercise_Name: string; }
 interface WorkoutRecord { record_Id: number; exercise_Name: string; weight: number; reps: number; }
 
-const WorkoutPage = () => {
-    // マスターデータ用
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]);
+// 親（App.tsx）から受け取る「仕送り」の設計図
+interface Props {
+    categories: Category[];
+    exercises: Exercise[];
+    isLoading: boolean;
+}
+
+// React.FC<Props> を指定し、親からのデータを受け取ります
+const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
+    // マスターデータの useState は削除し、本日の「履歴」だけをこのページで管理します
     const [history, setHistory] = useState<WorkoutRecord[]>([]);
-    const [isLoading, setIsLoading] = useState(false); 
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false); 
 
     // 選択状態管理
     const [selectedCatId, setSelectedCatId] = useState<number>(0);
@@ -18,32 +24,26 @@ const WorkoutPage = () => {
     const [weight, setWeight] = useState<number | string>('');
     const [reps, setReps] = useState<number | string>('');
 
-    // --- 1. データの取得（1つずつ確実に直列処理） ---
-    const loadAllData = async () => {
-        //if (isLoading) return; 
-
-        setIsLoading(true);
+    // --- 1. 履歴データ（今日の筋トレ内容）だけの取得に特化 ---
+    const loadHistoryData = async () => {
+        setIsHistoryLoading(true);
         try {
-            // ① categories の取得（末尾小文字）
-            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-            if (catRes.ok) setCategories(await catRes.json());
-
-            // ② exercises の取得（末尾小文字に完全統一）
-            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
-            if (exRes.ok) setExercises(await exRes.json());
-
-            // ③ 履歴の取得（Wは大文字）
+            // 部位や種目は親から貰うので、ここでは Workouts（履歴）だけを1回ピンポイントで取得します
             const historyRes = await fetch('https://muscle-training-management.onrender.com/api/Workouts');
-            if (historyRes.ok) setHistory(await historyRes.json());
-
+            if (historyRes.ok) {
+                setHistory(await historyRes.json());
+            }
         } catch (error) {
-            console.error("データ取得失敗:", error);
+            console.error("履歴の取得失敗:", error);
         } finally {
-            setIsLoading(false);
+            setIsHistoryLoading(false);
         }
     };
 
-    useEffect(() => { loadAllData(); }, []);
+    // ページが開いた時に履歴を読み込む
+    useEffect(() => { 
+        loadHistoryData(); 
+    }, []);
 
     // --- 2. 保存処理 ---
     const handleSave = async () => {
@@ -66,7 +66,7 @@ const WorkoutPage = () => {
 
         setWeight('');
         setReps('');
-        loadAllData(); // リストを更新
+        loadHistoryData(); // 履歴のリストだけを更新
     };
 
     // --- 3. 削除処理 ---
@@ -74,7 +74,7 @@ const WorkoutPage = () => {
         if(!confirm("本当に削除しますか？")) return;
         await fetch(`https://muscle-training-management.onrender.com/api/Workouts/${recordId}`,{ method: 'DELETE'});
 
-        loadAllData();
+        loadHistoryData(); // 履歴のリストだけを更新
     };
 
     // 現在選択されている部位に属する種目だけを抽出
@@ -84,8 +84,8 @@ const WorkoutPage = () => {
         return exerciseCatId === selectedId;
     });
 
-    // サーバ起動中のロード画面
-    if (isLoading && categories.length === 0) {
+    // 親のデータ読み込み中、または履歴の読み込み中のロード画面
+    if ((isLoading && categories.length === 0) || isHistoryLoading && history.length === 0) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <div style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid #3498db', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px' }}></div>

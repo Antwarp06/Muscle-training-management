@@ -1,72 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-// 型定義 (サーバー側が大文字・小文字どちらで返してきてもエラーにしないよう optional にします)
+// --- 型定義 ---
 interface Category {
-    category_Id?: number;
-    Category_Id?: number;
-    category_Name?: string;
-    Category_Name?: string;
+    category_Id: number;
+    category_Name: string;
 }
 
 interface Exercise {
-    exercise_Id?: number;
-    Exercise_Id?: number;
-    exercise_Name?: string;
-    Exercise_Name?: string;
-    category_Id?: number;
-    Category_Id?: number;
+    exercise_Id: number;
+    exercise_Name: string;
+    category_Id: number;
 }
 
-const SettingsPage: React.FC = () => {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]); 
-    const [isLoading, setIsLoading] = useState(false);
+// 親（App.tsx）から受け取る「仕送り」の設計図（Props）
+interface Props {
+    categories: Category[];
+    setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+    exercises: Exercise[];
+    setExercises: React.Dispatch<React.SetStateAction<Exercise[]>>;
+    isLoading: boolean;
+}
+
+// () の中に Props を書いて、親からのデータを受け入れます
+const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, setExercises, isLoading }) => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
     const [newExerciseName, setNewExerciseName] = useState('');
 
-// --- 1. データ取得関数（直列通信 ＆ 同時描画のハイブリッド版） ---
-    const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-            if (!catRes.ok) throw new Error("部位の取得に失敗");
-            const catData = await catRes.json();
-
-            const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
-            if (!exRes.ok) throw new Error("種目の取得に失敗");
-            const exData = await exRes.json();
-
-            console.log("📦 [DBからの生データ] 部位:", catData);
-            console.log("📦 [DBからの生データ] 種目:", exData);
-
-            // データ型の保証
-            const cleanCategories = catData.map((c: any) => ({
-                category_Id: Number(c.category_Id ?? c.Category_Id) || 0,
-                category_Name: String(c.category_Name ?? c.Category_Name) || ""
-            }));
-
-            const cleanExercises = exData.map((e: any) => ({
-                exercise_Id: Number(e.exercise_Id ?? e.Exercise_Id) || 0,
-                exercise_Name: String(e.exercise_Name ?? e.Exercise_Name) || "",
-                category_Id: Number(e.category_Id ?? e.Category_Id) || 0
-            }));
-
-            setCategories(cleanCategories);
-            setExercises(cleanExercises);
-
-        } catch (error) {
-            console.error("通信の裏側でエラーを検知:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    // --- ロード画面表示 ---
+    // --- ロード画面表示（親の isLoading をそのまま使います） ---
     if (isLoading) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', textAlign: 'center' }}>
@@ -81,39 +42,60 @@ const SettingsPage: React.FC = () => {
     // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
-        await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
+        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_Name: newCategoryName })
         });
-        setNewCategoryName('');
-        fetchData();
+        
+        // 【通信削減】サーバーから再取得せず、手元の画面にだけ「ポンッ」と追加する
+        if (res.ok) {
+            // 仮のID（現在の時間）を使って即座に画面へ反映
+            const newCat: Category = { category_Id: Date.now(), category_Name: newCategoryName };
+            setCategories([...categories, newCat]);
+            setNewCategoryName('');
+        }
     };
 
     const handleAddExercise = async () => {
         if (!newExerciseName.trim() || selectedCategoryId === 0) return;
-        await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
+        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
         });
-        setNewExerciseName('');
-        fetchData();
+
+        // 【通信削減】手元の画面にだけ「ポンッ」と追加する
+        if (res.ok) {
+            const newEx: Exercise = { exercise_Id: Date.now(), category_Id: selectedCategoryId, exercise_Name: newExerciseName };
+            setExercises([...exercises, newEx]);
+            setNewExerciseName('');
+        }
     };
 
     // --- 3. 削除処理 ---
     const handleDeleteCategory = async (id: number) => {
         if (!confirm("この部位を削除しますか？")) return;
         const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
-        if (res.ok) fetchData();
-        else alert("紐づく種目があるため削除できません");
+        
+        if (res.ok) {
+            // 【通信削減】削除されたIDだけを手元のリストから省く
+            setCategories(categories.filter(c => c.category_Id !== id));
+        } else {
+            alert("紐づく種目があるため削除できません");
+        }
     };
 
     const handleDeleteExercise = async (id: number) => {
         if (!confirm("この種目を削除しますか？")) return;
         const res = await fetch(`https://muscle-training-management.onrender.com/api/Exercises/${id}`, { method: 'DELETE' });
-        if (res.ok) fetchData();
-        else alert("記録が存在するため削除できません");
+        
+        if (res.ok) {
+             // 【通信削減】削除されたIDだけを手元のリストから省く
+            setExercises(exercises.filter(e => e.exercise_Id !== id));
+        } else {
+            alert("記録が存在するため削除できません");
+        }
     };
 
     return (
@@ -134,11 +116,9 @@ const SettingsPage: React.FC = () => {
                     <h3>種目追加</h3>
                     <select value={selectedCategoryId} onChange={e => setSelectedCategoryId(Number(e.target.value))} style={{ width: '100%', marginBottom: '10px' }}>
                         <option value="0">部位を選択</option>
-                        {categories.map(cat => {
-                            const cId = cat.category_Id ?? cat.Category_Id ?? 0;
-                            const cName = cat.category_Name ?? cat.Category_Name ?? "";
-                            return <option key={cId} value={cId}>{cName}</option>;
-                        })}
+                        {categories.map(cat => (
+                            <option key={cat.category_Id} value={cat.category_Id}>{cat.category_Name}</option>
+                        ))}
                     </select>
                     <input type="text" value={newExerciseName} onChange={e => setNewExerciseName(e.target.value)} style={{ width: '70%', padding: '8px' }} />
                     <button onClick={handleAddExercise}>登録</button>
@@ -153,16 +133,12 @@ const SettingsPage: React.FC = () => {
                 <div style={{ flex: 1 }}>
                     <h4>登録済みの部位</h4>
                     <ul style={{ listStyle: 'none', padding: 0 }}>
-                        {categories.map(cat => {
-                            const cId = cat.category_Id ?? cat.Category_Id ?? 0;
-                            const cName = cat.category_Name ?? cat.Category_Name ?? "";
-                            return (
-                                <li key={cId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
-                                    {cName}
-                                    <button onClick={() => handleDeleteCategory(cId)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
-                                </li>
-                            );
-                        })}
+                        {categories.map(cat => (
+                            <li key={cat.category_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
+                                {cat.category_Name}
+                                <button onClick={() => handleDeleteCategory(cat.category_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
+                            </li>
+                        ))}
                     </ul>
                 </div>
 
@@ -172,22 +148,16 @@ const SettingsPage: React.FC = () => {
                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         <ul style={{ listStyle: 'none', padding: 0 }}>
                             {exercises.map(ex => {
-                                const eId = ex.exercise_Id ?? ex.Exercise_Id ?? 0;
-                                const eName = ex.exercise_Name ?? ex.Exercise_Name ?? "";
-                                const eCatId = ex.category_Id ?? ex.Category_Id ?? 0;
-
-                                const parentCategory = categories.find(c => {
-                                    const cId = c.category_Id ?? c.Category_Id ?? 0;
-                                    return cId === eCatId;
-                                });
-                                const parentName = parentCategory?.category_Name ?? parentCategory?.Category_Name ?? "未分類";
+                                // データが綺麗に統一されたため、大文字小文字の複雑な判定（??）は不要になりました
+                                const parentCategory = categories.find(c => c.category_Id === ex.category_Id);
+                                const parentName = parentCategory?.category_Name || "未分類";
 
                                 return (
-                                    <li key={eId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
+                                    <li key={ex.exercise_Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #eee' }}>
                                         <span>
-                                            <small style={{ color: '#666' }}>[{parentName}]</small> {eName}
+                                            <small style={{ color: '#666' }}>[{parentName}]</small> {ex.exercise_Name}
                                         </span>
-                                        <button onClick={() => handleDeleteExercise(eId)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
+                                        <button onClick={() => handleDeleteExercise(ex.exercise_Id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>削除</button>
                                     </li>
                                 );
                             })}
