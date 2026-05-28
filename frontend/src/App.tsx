@@ -22,18 +22,32 @@ function App() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- アプリ起動時に1回だけデータを取得 ---
+// --- アプリ起動時にデータを取得 ---
   useEffect(() => {
+    // ⭕ 【新機能】データが空っぽ（[]）だった場合、1秒待って指定回数やり直す関数
+    const fetchWithRetry = async (url: string, maxRetries: number = 3) => {
+      for (let i = 0; i < maxRetries; i++) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("通信失敗");
+        const data = await res.json();
+
+        // データが1件でも入っていれば、ループを抜けて即座にデータを返す
+        if (data && data.length > 0) {
+          return data;
+        }
+
+        // 空っぽだった場合、コンソールに警告を出して1秒待機
+        console.warn(`[リトライ中 ${i + 1}/${maxRetries}] データが空でした: ${url}`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      return []; // 指定回数やってもダメなら、諦めて空を返す
+    };
+
     const fetchMasterData = async () => {
       try {
-        // 無料DBがパンクしないよう、順番に（直列で）取得します
-        const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
-        if (!catRes.ok) throw new Error("部位の取得失敗");
-        const catData = await catRes.json();
-
-        const exRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
-        if (!exRes.ok) throw new Error("種目の取得失敗");
-        const exData = await exRes.json();
+        // ⭕ 先ほど作ったリトライ関数を使って取得する
+        const catData = await fetchWithRetry('https://muscle-training-management.onrender.com/api/MasterData/categories');
+        const exData = await fetchWithRetry('https://muscle-training-management.onrender.com/api/MasterData/exercises');
 
         // データの型と名前を綺麗な小文字に統一
         const cleanCategories = catData.map((c: any) => ({
@@ -52,14 +66,13 @@ function App() {
 
       } catch (error) {
         console.error("初期データの読み込みエラー:", error);
-        alert("データの取得に失敗しました。画面をリロードしてください。");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchMasterData();
-  }, []); // 空の配列 `[]` が「最初の一回だけ」を保証します
+  }, []);
 
   return (
     <Router>
