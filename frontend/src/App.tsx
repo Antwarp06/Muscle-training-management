@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import WorkoutPage from './pages/WorkoutPage';
 import ChartPage from './pages/ChartPage';
@@ -26,7 +26,7 @@ function App() {
   useEffect(() => {
     const fetchMasterData = async () => {
       try {
-        // ⭕ 無料DBがパンクしないよう、順番に（直列で）取得します
+        // 無料DBがパンクしないよう、順番に（直列で）取得します
         const catRes = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
         if (!catRes.ok) throw new Error("部位の取得失敗");
         const catData = await catRes.json();
@@ -59,7 +59,7 @@ function App() {
     };
 
     fetchMasterData();
-  }, []); // 👈 空の配列 `[]` が「最初の一回だけ」を保証します
+  }, []); // 空の配列 `[]` が「最初の一回だけ」を保証します
 
   return (
     <Router>
@@ -73,7 +73,7 @@ function App() {
 
         {/* 画面の切り替え設定 */}
         <Routes>
-          {/* ⭕ 各ページに、実家で取得したデータ（仕送り）を渡す */}
+          {/* 各ページに、実家で取得したデータ（仕送り）を渡す */}
           <Route path="/" element={
             <WorkoutPage 
               categories={categories} 

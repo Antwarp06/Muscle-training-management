@@ -22,7 +22,7 @@ interface Props {
 }
 
 // React.FC<Props> を指定し、親からのデータを受け取ります
-const ChartPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
+const ChartPage: React.FC<Props> = ({ isLoading }) => {
     const [ chartData, setChartData ] = useState<any>(null);
     const [ isChartLoading, setIsChartLoading ] = useState(false); // グラフ用の履歴取得フラグ
 
