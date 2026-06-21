@@ -73,11 +73,10 @@ public class MasterDataController : ControllerBase {
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        using var checkCmd = new NpgsqlCommand("SELECT COUNT(*) FROM \"Exercises\" WHERE \"Category_Id\" = @catId AND \"Exercise_Name\" = @name", conn);
-        checkCmd.Parameters.AddWithValue("catId", exercise.Category_Id);
-        checkCmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
+        using var checkCmd = new NpgsqlCommand("SELECT COUNT(*) FROM \"Categories\" WHERE \"Category_Name\" = @name", conn);
+        checkCmd.Parameters.AddWithValue("name", category.Category_Name);
         var count = Convert.ToInt64(await checkCmd.ExecuteScalarAsync());
-        if (count > 0) return BadRequest(new { message = "その種目はすでに登録されています。" });
+        if (count > 0) return BadRequest(new { message = "その部位はすでに登録されています。" });
 
         using var cmd = new NpgsqlCommand("INSERT INTO \"Categories\" (\"Category_Name\") VALUES (@name)", conn);
         cmd.Parameters.AddWithValue("name", category.Category_Name);
