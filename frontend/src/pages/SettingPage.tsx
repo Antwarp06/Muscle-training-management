@@ -41,7 +41,15 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
 
     // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
-        if (!newCategoryName.trim()) return;
+        if (!newCategoryName.trim()) {
+            alert("部位名を入力してください");
+            return;
+        }
+        const isDuplicate = categories.some(cat => cat.category_Name === newCategoryName.trim());
+        if (isDuplicate) {
+            alert("その部位はすでに登録されています！");
+            return;
+        }
         const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -58,7 +66,17 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
     };
 
     const handleAddExercise = async () => {
-        if (!newExerciseName.trim() || selectedCategoryId === 0) return;
+        if (!newExerciseName.trim() || selectedCategoryId === 0) {
+            alert("部位を選択し、種目名を入力してください");
+            return;
+        }
+
+        const isDuplicate = exercises.some( ex => ex.category_Id === selectedCategoryId && ex.exercise_Name === newExerciseName.trim() );
+        if (isDuplicate) {
+        alert("その種目はすでに登録されています！");
+        return;
+        }
+        
         const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -108,7 +126,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
                 <section style={{ flex: 1, backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
                     <h3>部位追加</h3>
-                    <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} style={{ width: '70%', padding: '8px' }} />
+                    <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} maxLength={30} required placeholder="部位名を入力（30文字以内）" style={{ width: '70%', padding: '8px' }} />
                     <button onClick={handleAddCategory}>登録</button>
                 </section>
 
@@ -120,7 +138,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
                             <option key={cat.category_Id} value={cat.category_Id}>{cat.category_Name}</option>
                         ))}
                     </select>
-                    <input type="text" value={newExerciseName} onChange={e => setNewExerciseName(e.target.value)} style={{ width: '70%', padding: '8px' }} />
+                    <input type="text" value={newExerciseName} onChange={e => setNewExerciseName(e.target.value)} maxLength={50} required placeholder="種目名を入力（50文字以内）" style={{ width: '70%', padding: '8px' }} />
                     <button onClick={handleAddExercise}>登録</button>
                 </section>
             </div>

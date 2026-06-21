@@ -52,6 +52,17 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
             return;
         }
 
+        const numWeight = Number(weight);
+        const numReps = Number(reps);
+        if (numWeight < 1 || numWeight > 300) {
+            alert("重量は 1kg から 300kg の範囲で入力してください！");
+            return;
+        }
+        if (numReps < 1 || numReps > 100) {
+            alert("回数は 1回 から 100回 の範囲で入力してください！");
+            return;
+        }
+
         const body = {
             exercise_Id: selectedExId,
             weight: Number(weight),
@@ -129,11 +140,11 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '20px'}}>
                         <div style={{ flex: 1}}>
                             <label style={{ display: 'block',fontSize: '0.8rem', fontWeight: 'bold'}}>重量(kg)</label>
-                            <input type="number" step="0.1" style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }} value={weight} onChange={e => setWeight(e.target.value)} />
+                            <input type="number" min="1" max="300" step="0.1" style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }} value={weight} onChange={e => setWeight(e.target.value)} />
                         </div>
                         <div style={{flex: 1}}>
                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold'}}>回数(回)</label>
-                            <input type="number" style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }} value={reps} onChange={e => setReps(e.target.value)}/>
+                            <input type="number" min="1" max="100" style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }} value={reps} onChange={e => setReps(e.target.value)}/>
                         </div>
                     </div>
                     
