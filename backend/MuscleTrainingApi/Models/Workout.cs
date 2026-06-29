@@ -14,9 +14,11 @@ public class Workout
     public int Exercise_Id { get; set; }//IDで紐づけ
 
     [Column("Weight")]
+    [Range(1, 300, ErrorMessage = "重量は 1kg から 300kg の範囲で入力してください。")]
     public double Weight { get; set; }//重さ
 
     [Column("Reps")]
+    [Range(1, 100, ErrorMessage = "回数は 1回 から 100回 の範囲で入力してください。")]
     public int Reps { get; set; }//回数
 
     [Column("CreatedAt")] 

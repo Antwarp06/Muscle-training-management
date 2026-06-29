@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MuscleTrainingApi.Models;
+using MuscleTrainingApi.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 // --- 1. サービスの登録 (builder.Buildの前) ---
@@ -12,6 +13,8 @@ builder.Services.AddControllers();
 // APIコントローラーを有効にする
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IMasterDataRepository, MasterDataRepository>();
+
 // --- CORS 設定 ---
 builder.Services.AddCors(options =>
 {
