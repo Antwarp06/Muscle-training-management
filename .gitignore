@@ -4,3 +4,6 @@ db_data/
 # C#のビルド時にできる不要なファイル
 [Bb]in/
 [Oo]bj/
+
+# ローカル開発用の設定（DB接続情報などの秘密を含むためコミットしない）
+appsettings.Development.json
