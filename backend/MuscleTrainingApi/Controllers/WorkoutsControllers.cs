@@ -19,21 +19,32 @@ public class WorkoutsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] Workout workout)
     {
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
+        try
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
 
-        using var cmd = new NpgsqlCommand(
-            "INSERT INTO \"Workout\" (\"Exercise_Id\", \"Weight\", \"Reps\") VALUES (@exId, @weight, @reps)", 
-            conn
-        );
+            // CreatedAt は NOT NULL 制約があるため、DB側の NOW() で現在日時を入れる
+            using var cmd = new NpgsqlCommand(
+                "INSERT INTO \"Workout\" (\"Exercise_Id\", \"Weight\", \"Reps\", \"CreatedAt\") VALUES (@exId, @weight, @reps, NOW())",
+                conn
+            );
 
-        cmd.Parameters.AddWithValue("exId", workout.Exercise_Id);
-        cmd.Parameters.AddWithValue("weight", workout.Weight);
-        cmd.Parameters.AddWithValue("reps", workout.Reps);
+            cmd.Parameters.AddWithValue("exId", workout.Exercise_Id);
+            cmd.Parameters.AddWithValue("weight", workout.Weight);
+            cmd.Parameters.AddWithValue("reps", workout.Reps);
 
-        await cmd.ExecuteNonQueryAsync();
+            await cmd.ExecuteNonQueryAsync();
 
-        return Ok(new { message = "保存成功！" });
+            return Ok(new { message = "保存成功！" });
+        }
+        catch (Exception ex)
+        {
+            // 例外を投げっぱなしにするとCORSヘッダーが消えてブラウザでCORSエラーに化けるため、
+            // ここで捕まえて500として返す
+            Console.WriteLine($"【Workouts保存エラー】: {ex.Message}");
+            return StatusCode(500, new { message = "保存に失敗しました。" });
+        }
     }
 
     // --- 記録履歴の一覧取得 (GET) ---

@@ -69,23 +69,41 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
             reps: Number(reps)
         };
 
-        await fetch('https://muscle-training-management.onrender.com/api/Workouts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
+        try {
+            const res = await fetch('https://muscle-training-management.onrender.com/api/Workouts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
 
-        setWeight('');
-        setReps('');
-        loadHistoryData(); // 履歴のリストだけを更新
+            if (!res.ok) {
+                alert("保存に失敗しました。時間をおいて再度お試しください。");
+                return; // 失敗時は入力値を残したまま終了
+            }
+
+            setWeight('');
+            setReps('');
+            loadHistoryData(); // 履歴のリストだけを更新
+        } catch (error) {
+            console.error("保存の通信エラー:", error);
+            alert("通信エラーが発生しました。サーバーが起動中の可能性があるので、少し待ってから再度お試しください。");
+        }
     };
 
     // --- 3. 削除処理 ---
     const handkeDelete = async ( recordId: number ) => {
         if(!confirm("本当に削除しますか？")) return;
-        await fetch(`https://muscle-training-management.onrender.com/api/Workouts/${recordId}`,{ method: 'DELETE'});
-
-        loadHistoryData(); // 履歴のリストだけを更新
+        try {
+            const res = await fetch(`https://muscle-training-management.onrender.com/api/Workouts/${recordId}`,{ method: 'DELETE'});
+            if (!res.ok) {
+                alert("削除に失敗しました。");
+                return;
+            }
+            loadHistoryData(); // 履歴のリストだけを更新
+        } catch (error) {
+            console.error("削除の通信エラー:", error);
+            alert("通信エラーが発生しました。");
+        }
     };
 
     // 現在選択されている部位に属する種目だけを抽出
