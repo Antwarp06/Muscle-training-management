@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
+import ErrorRetry from '../components/ErrorRetry';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
 // Chart.jsの初期設定
@@ -28,18 +29,31 @@ interface Props {
 const ChartPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
     const [ workouts, setWorkouts ] = useState<Workout[]>([]);
     const [ isChartLoading, setIsChartLoading ] = useState(false); // グラフ用の履歴取得フラグ
+    const [ chartError, setChartError ] = useState(false); // グラフデータの取得で通信エラーが起きたかどうかのフラグ
 
     // 選択状態管理（記録画面と同じ「部位 → 種目」の2段階選択）
     const [ selectedCatId, setSelectedCatId ] = useState<number>(0);
     const [ selectedExId, setSelectedExId ] = useState<number>(0);
 
-    useEffect(() => {
+    // 「再度実行」ボタンからも呼び出せるように、useEffect の外に関数として定義します
+    const loadChartData = () => {
         setIsChartLoading(true);
+        setChartError(false); // 再実行するときは、前回のエラー表示をいったんリセット
         fetch('https://muscle-training-management.onrender.com/api/Workouts')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("グラフデータの取得失敗"); // サーバーがエラーを返した場合も catch に送る
+                return res.json();
+            })
             .then((data: Workout[]) => setWorkouts(data))
-            .catch(err => console.error("グラフデータの取得エラー:", err))
+            .catch(err => {
+                console.error("グラフデータの取得エラー:", err);
+                setChartError(true); // エラー表示のスイッチをON
+            })
             .finally(() => setIsChartLoading(false));
+    };
+
+    useEffect(() => {
+        loadChartData();
     }, []);
 
     // 現在選択されている部位に属する種目だけを抽出
@@ -71,6 +85,16 @@ const ChartPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
                 <div style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid #3498db', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px' }}></div>
                 <h2>データを読み込んでいます...</h2>
                 <style>{' @keyframes spin{ 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} } '}</style>
+            </div>
+        );
+    }
+
+    // グラフデータの取得に失敗した場合は、エラーメッセージと再度実行ボタンを表示
+    if (chartError) {
+        return (
+            <div style={{ padding: '20px'}}>
+                <h2>成長グラフ</h2>
+                <ErrorRetry onRetry={loadChartData} />
             </div>
         );
     }

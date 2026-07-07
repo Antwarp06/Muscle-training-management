@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ErrorRetry from "../components/ErrorRetry";
 
 // --- 型定義 ---
 interface Category { category_Id: number; category_Name: string; }
@@ -16,7 +17,8 @@ interface Props {
 const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
     // マスターデータの useState は削除し、本日の「履歴」だけをこのページで管理します
     const [history, setHistory] = useState<WorkoutRecord[]>([]);
-    const [isHistoryLoading, setIsHistoryLoading] = useState(false); 
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState(false); // 履歴取得で通信エラーが起きたかどうかのフラグ
 
     // 選択状態管理
     const [selectedCatId, setSelectedCatId] = useState<number>(0);
@@ -27,14 +29,15 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
     // --- 1. 履歴データ（今日の筋トレ内容）だけの取得に特化 ---
     const loadHistoryData = async () => {
         setIsHistoryLoading(true);
+        setHistoryError(false); // 再実行するときは、前回のエラー表示をいったんリセット
         try {
             // 部位や種目は親から貰うので、ここでは Workouts（履歴）だけを1回ピンポイントで取得します
             const historyRes = await fetch('https://muscle-training-management.onrender.com/api/Workouts');
-            if (historyRes.ok) {
-                setHistory(await historyRes.json());
-            }
+            if (!historyRes.ok) throw new Error("履歴の取得失敗"); // サーバーがエラーを返した場合も catch に送る
+            setHistory(await historyRes.json());
         } catch (error) {
             console.error("履歴の取得失敗:", error);
+            setHistoryError(true); // エラー表示のスイッチをON
         } finally {
             setIsHistoryLoading(false);
         }
@@ -174,6 +177,13 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
                 {/* 右側:履歴エリア */}
                 <div style={{ flex: '1'}}>
                     <h3 style={{ marginTop: 0, fontSize: '1.2rem', color: '#333'}}>本日の記録</h3>
+                    {historyError ? (
+                        // 履歴の取得に失敗した場合は、表の代わりにエラーメッセージと再度実行ボタンを表示
+                        <div style={{ border: '1px solid #eee', borderRadius: '8px'}}>
+                            <ErrorRetry onRetry={loadHistoryData} />
+                        </div>
+                    ) : (
+                    <>
                     <div style={{ maxHeight: '600px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '8px'}}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
@@ -205,6 +215,8 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
                         </table>
                     </div>
                     {history.length === 0 && <p style={{ textAlign: 'center', color: '#999', marginTop: '20px'}}>今日の記録はまだありません</p>}
+                    </>
+                    )}
                 </div>
             </div>
         </div>
