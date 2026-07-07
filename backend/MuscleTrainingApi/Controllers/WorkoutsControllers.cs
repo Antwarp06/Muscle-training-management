@@ -58,11 +58,13 @@ public class WorkoutsController : ControllerBase
             await conn.OpenAsync();
 
             string sql = @"
-                SELECT 
-                    w.""Record_Id"", 
-                    e.""Exercise_Name"", 
-                    w.""Weight"", 
-                    w.""Reps"" 
+                SELECT
+                    w.""Record_Id"",
+                    e.""Exercise_Name"",
+                    w.""Weight"",
+                    w.""Reps"",
+                    w.""Exercise_Id"",
+                    w.""CreatedAt""
                 FROM ""Workout"" w
                 JOIN ""Exercises"" e ON w.""Exercise_Id"" = e.""Exercise_Id""
                 ORDER BY w.""Record_Id"" DESC";
@@ -76,13 +78,17 @@ public class WorkoutsController : ControllerBase
                 var rawExerciseName = reader.GetValue(1);
                 var rawWeight = reader.GetValue(2);
                 var rawReps = reader.GetValue(3);
+                var rawExerciseId = reader.GetValue(4);
+                var rawCreatedAt = reader.GetValue(5);
 
                 workouts.Add(new
                 {
                     record_Id = rawRecordId != DBNull.Value ? Convert.ToInt32(rawRecordId) : 0,
                     exercise_Name = rawExerciseName != DBNull.Value ? rawExerciseName.ToString() : "",
                     weight = rawWeight != DBNull.Value ? Convert.ToDouble(rawWeight) : 0.0,
-                    reps = rawReps != DBNull.Value ? Convert.ToInt32(rawReps) : 0
+                    reps = rawReps != DBNull.Value ? Convert.ToInt32(rawReps) : 0,
+                    exercise_Id = rawExerciseId != DBNull.Value ? Convert.ToInt32(rawExerciseId) : 0,
+                    createdAt = rawCreatedAt != DBNull.Value ? Convert.ToDateTime(rawCreatedAt) : (DateTime?)null
                 });
             }
             return Ok(workouts);
