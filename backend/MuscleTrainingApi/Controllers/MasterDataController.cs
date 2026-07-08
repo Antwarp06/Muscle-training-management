@@ -78,10 +78,10 @@ public class MasterDataController : ControllerBase {
         var count = Convert.ToInt64(await checkCmd.ExecuteScalarAsync());
         if (count > 0) return BadRequest(new { message = "その部位はすでに登録されています。" });
 
-        using var cmd = new NpgsqlCommand("INSERT INTO \"Categories\" (\"Category_Name\") VALUES (@name)", conn);
+        using var cmd = new NpgsqlCommand("INSERT INTO \"Categories\" (\"Category_Name\") VALUES (@name) RETURNING \"Category_Id\"", conn);
         cmd.Parameters.AddWithValue("name", category.Category_Name);
-        await cmd.ExecuteNonQueryAsync();
-        return Ok();
+        var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { category_Id = newId });
     }
 
 // --- 種目の追加 ---
@@ -96,10 +96,10 @@ public class MasterDataController : ControllerBase {
         var count = Convert.ToInt64(await checkCmd.ExecuteScalarAsync());
         if (count > 0) return BadRequest(new { message = "その種目はすでに登録されています。" });
 
-        using var cmd = new NpgsqlCommand("INSERT INTO \"Exercises\" (\"Category_Id\", \"Exercise_Name\") VALUES (@catId, @name)", conn);
+        using var cmd = new NpgsqlCommand("INSERT INTO \"Exercises\" (\"Category_Id\", \"Exercise_Name\") VALUES (@catId, @name) RETURNING \"Exercise_Id\"", conn);
         cmd.Parameters.AddWithValue("catId", exercise.Category_Id);
         cmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
-        await cmd.ExecuteNonQueryAsync();
-        return Ok();
+        var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { exercise_Id = newId });
     }
 }

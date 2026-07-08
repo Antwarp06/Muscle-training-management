@@ -26,6 +26,8 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
     const [newCategoryName, setNewCategoryName] = useState('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
     const [newExerciseName, setNewExerciseName] = useState('');
+    // 通信自体が失敗したときに、リロードボタン付きのお知らせを出すためのスイッチ
+    const [commError, setCommError] = useState(false);
 
     // --- ロード画面表示（親の isLoading をそのまま使います） ---
     if (isLoading) {
@@ -50,18 +52,26 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
             alert("その部位はすでに登録されています！");
             return;
         }
-        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ category_Name: newCategoryName })
-        });
-        
-        // 【通信削減】サーバーから再取得せず、手元の画面にだけ「ポンッ」と追加する
-        if (res.ok) {
-            // 仮のID（現在の時間）を使って即座に画面へ反映
-            const newCat: Category = { category_Id: Date.now(), category_Name: newCategoryName };
-            setCategories([...categories, newCat]);
-            setNewCategoryName('');
+        // 通信自体の失敗（ネット切断・サーバー停止など）は catch で受け止める
+        try {
+            const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category_Name: newCategoryName })
+            });
+
+            // 【通信削減】サーバーから再取得せず、手元の画面にだけ「ポンッ」と追加する
+            if (res.ok) {
+                // サーバーが発行した本当のIDを受け取って画面へ反映
+                const data = await res.json();
+                const newCat: Category = { category_Id: data.category_Id, category_Name: newCategoryName };
+                setCategories([...categories, newCat]);
+                setNewCategoryName('');
+            } else {
+                alert("部位の登録に失敗しました。時間をおいて再度お試しください。");
+            }
+        } catch {
+            setCommError(true); // 画面上部にリロードボタン付きのお知らせを表示
         }
     };
 
@@ -77,42 +87,59 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
         return;
         }
         
-        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
-        });
+        // 通信自体の失敗（ネット切断・サーバー停止など）は catch で受け止める
+        try {
+            const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
+            });
 
-        // 【通信削減】手元の画面にだけ「ポンッ」と追加する
-        if (res.ok) {
-            const newEx: Exercise = { exercise_Id: Date.now(), category_Id: selectedCategoryId, exercise_Name: newExerciseName };
-            setExercises([...exercises, newEx]);
-            setNewExerciseName('');
+            // 【通信削減】手元の画面にだけ「ポンッ」と追加する
+            if (res.ok) {
+                // サーバーが発行した本当のIDを受け取って画面へ反映
+                const data = await res.json();
+                const newEx: Exercise = { exercise_Id: data.exercise_Id, category_Id: selectedCategoryId, exercise_Name: newExerciseName };
+                setExercises([...exercises, newEx]);
+                setNewExerciseName('');
+            } else {
+                alert("種目の登録に失敗しました。時間をおいて再度お試しください。");
+            }
+        } catch {
+            setCommError(true); // 画面上部にリロードボタン付きのお知らせを表示
         }
     };
 
     // --- 3. 削除処理 ---
     const handleDeleteCategory = async (id: number) => {
         if (!confirm("この部位を削除しますか？")) return;
-        const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
-        
-        if (res.ok) {
-            // 【通信削減】削除されたIDだけを手元のリストから省く
-            setCategories(categories.filter(c => c.category_Id !== id));
-        } else {
-            alert("紐づく種目があるため削除できません");
+        try {
+            const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
+
+            if (res.ok) {
+                // 【通信削減】削除されたIDだけを手元のリストから省く
+                setCategories(categories.filter(c => c.category_Id !== id));
+            } else {
+                alert("紐づく種目があるため削除できません");
+            }
+        } catch {
+            setCommError(true); // 画面上部にリロードボタン付きのお知らせを表示
         }
     };
 
     const handleDeleteExercise = async (id: number) => {
         if (!confirm("この種目を削除しますか？")) return;
-        const res = await fetch(`https://muscle-training-management.onrender.com/api/Exercises/${id}`, { method: 'DELETE' });
-        
-        if (res.ok) {
-             // 【通信削減】削除されたIDだけを手元のリストから省く
-            setExercises(exercises.filter(e => e.exercise_Id !== id));
-        } else {
-            alert("記録が存在するため削除できません");
+        try {
+            const res = await fetch(`https://muscle-training-management.onrender.com/api/Exercises/${id}`, { method: 'DELETE' });
+
+            if (res.ok) {
+                // 【通信削減】削除されたIDだけを手元のリストから省く
+                setExercises(exercises.filter(e => e.exercise_Id !== id));
+            } else {
+                alert("記録が存在するため削除できません");
+            }
+        } catch {
+            setCommError(true); // 画面上部にリロードボタン付きのお知らせを表示
         }
     };
 
@@ -121,6 +148,23 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
             <h1>トレーニング設定</h1>
             <p>部位と種目の登録・管理を行います。</p>
             <hr />
+
+            {/* --- 通信失敗のお知らせ（リロードボタン付き） --- */}
+            {commError && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', backgroundColor: '#fdecea', border: '1px solid #dc3545', borderRadius: '8px', padding: '10px 15px', marginBottom: '20px' }}>
+                    <span style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                        通信に失敗しました。ネットワーク接続を確認するか、ページをリロードしてください。
+                    </span>
+                    <span style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <button onClick={() => window.location.reload()} style={{ padding: '8px 20px', backgroundColor: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
+                            リロード
+                        </button>
+                        <button onClick={() => setCommError(false)} style={{ padding: '8px 12px', backgroundColor: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer' }}>
+                            閉じる
+                        </button>
+                    </span>
+                </div>
+            )}
 
             {/* --- 登録セクション --- */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
