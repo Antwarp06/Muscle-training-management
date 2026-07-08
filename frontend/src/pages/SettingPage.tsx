@@ -41,6 +41,26 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
         );
     }
 
+    // --- 最新データの取り直し（登録成功後にサーバーと同期するため） ---
+    const refreshCategories = async () => {
+        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
+        const data = await res.json();
+        setCategories(data.map((c: any) => ({
+            category_Id: Number(c.category_Id ?? c.Category_Id) || 0,
+            category_Name: String(c.category_Name ?? c.Category_Name) || ""
+        })));
+    };
+
+    const refreshExercises = async () => {
+        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
+        const data = await res.json();
+        setExercises(data.map((e: any) => ({
+            exercise_Id: Number(e.exercise_Id ?? e.Exercise_Id) || 0,
+            exercise_Name: String(e.exercise_Name ?? e.Exercise_Name) || "",
+            category_Id: Number(e.category_Id ?? e.Category_Id) || 0
+        })));
+    };
+
     // --- 2. 登録処理 ---
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) {
@@ -60,12 +80,9 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
                 body: JSON.stringify({ category_Name: newCategoryName })
             });
 
-            // 【通信削減】サーバーから再取得せず、手元の画面にだけ「ポンッ」と追加する
+            // 【同期】保存に成功したら、サーバーから最新の一覧を取り直して画面へ反映する
             if (res.ok) {
-                // サーバーが発行した本当のIDを受け取って画面へ反映
-                const data = await res.json();
-                const newCat: Category = { category_Id: data.category_Id, category_Name: newCategoryName };
-                setCategories([...categories, newCat]);
+                await refreshCategories();
                 setNewCategoryName('');
             } else {
                 alert("部位の登録に失敗しました。時間をおいて再度お試しください。");
@@ -95,12 +112,9 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
                 body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
             });
 
-            // 【通信削減】手元の画面にだけ「ポンッ」と追加する
+            // 【同期】保存に成功したら、サーバーから最新の一覧を取り直して画面へ反映する
             if (res.ok) {
-                // サーバーが発行した本当のIDを受け取って画面へ反映
-                const data = await res.json();
-                const newEx: Exercise = { exercise_Id: data.exercise_Id, category_Id: selectedCategoryId, exercise_Name: newExerciseName };
-                setExercises([...exercises, newEx]);
+                await refreshExercises();
                 setNewExerciseName('');
             } else {
                 alert("種目の登録に失敗しました。時間をおいて再度お試しください。");
