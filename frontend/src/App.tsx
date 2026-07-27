@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import WorkoutPage from './pages/WorkoutPage';
 import ChartPage from './pages/ChartPage';
 import SettingPage from './pages/SettingPage';
+import CardioPage from './pages/CardioPage';
 import ErrorRetry from './components/ErrorRetry';
 
 // --- 型定義 ---
@@ -95,6 +96,7 @@ function App() {
         {/* ナビゲーション */}
         <nav style={{ display: 'flex', gap: '15px', padding: '10px', background: '#eee' }}>
           <Link to="/">記録入力</Link>
+          <Link to="/cardio">有酸素</Link>
           <Link to="/charts">グラフ</Link>
           <Link to="/settings">種目管理</Link>
         </nav>
@@ -127,6 +129,8 @@ function App() {
               isLoading={isLoading} 
             />
           } />
+
+          <Route path="/cardio" element={<CardioPage />} />
         </Routes>
       </div>
     </Router>
