@@ -2,30 +2,37 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using MuscleTrainingApi.Models;
 
+namespace MuscleTrainingApi.Controllers;
+
 [Route("api/MasterData")]
 [ApiController]
-public class MasterDataController : ControllerBase {
+public class MasterDataController : SecuredController {
     private readonly string _connectionString;
 
     public MasterDataController(IConfiguration configuration) {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
     }
 
+    // --- 部位一覧の取得 (GET) ---
     [HttpGet("categories")]
     public async Task<ActionResult<IEnumerable<Category>>> GetCategories() {
         var categories = new List<Category>();
         try {
             using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();
-            using var cmd = new NpgsqlCommand("SELECT * FROM \"Categories\"", conn);
+
+            // SELECT * をやめて列名を明示している。
+            // User_Id が増えたことで列の順番が変わりうるため、番号での取り出しは危険。
+            using var cmd = new NpgsqlCommand(
+                "SELECT \"Category_Id\", \"Category_Name\" FROM \"Categories\" WHERE \"User_Id\" = @userId ORDER BY \"Category_Id\"",
+                conn);
+            cmd.Parameters.AddWithValue("userId", CurrentUserId);
+
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync()) {
-                var rawCategoryId = reader.GetValue(0);
-                var rawCategoryName = reader.GetValue(1);
-
                 categories.Add(new Category {
-                    Category_Id = rawCategoryId != DBNull.Value ? Convert.ToInt32(rawCategoryId) : 0,
-                    Category_Name = rawCategoryName != DBNull.Value ? rawCategoryName.ToString() : ""
+                    Category_Id = reader.GetInt32(0),
+                    Category_Name = reader.GetString(1)
                 });
             }
             return Ok(categories);
@@ -36,70 +43,100 @@ public class MasterDataController : ControllerBase {
         }
     }
 
-// --- 種目一覧の取得 (GET) ---
+    // --- 種目一覧の取得 (GET) ---
     [HttpGet("exercises")]
     public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises() {
         var exercises = new List<Exercise>();
         try {
             using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();
-            
-            string sql = "SELECT * FROM \"Exercises\"";
-            using var cmd = new NpgsqlCommand(sql, conn);
-            using var reader = await cmd.ExecuteReaderAsync();
-            
-            while (await reader.ReadAsync()) {
-                var rawExerciseId = reader.GetValue(0);
-                var rawCategoryId = reader.GetValue(1);
-                var rawExerciseName = reader.GetValue(2);
 
+            using var cmd = new NpgsqlCommand(
+                "SELECT \"Exercise_Id\", \"Category_Id\", \"Exercise_Name\" FROM \"Exercises\" WHERE \"User_Id\" = @userId ORDER BY \"Exercise_Id\"",
+                conn);
+            cmd.Parameters.AddWithValue("userId", CurrentUserId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) {
                 exercises.Add(new Exercise {
-                    Exercise_Id = rawExerciseId != DBNull.Value ? Convert.ToInt32(rawExerciseId) : 0,
-                    Category_Id = rawCategoryId != DBNull.Value ? Convert.ToInt32(rawCategoryId) : 0,
-                    Exercise_Name = rawExerciseName != DBNull.Value ? rawExerciseName.ToString() : ""
+                    Exercise_Id = reader.GetInt32(0),
+                    Category_Id = reader.GetInt32(1),
+                    Exercise_Name = reader.GetString(2)
                 });
             }
             return Ok(exercises);
         }
         catch (Exception ex) {
             Console.WriteLine($"【Exercises取得内部エラー】: {ex.Message}");
-            return Ok(new List<Exercise>()); 
+            return Ok(new List<Exercise>());
         }
     }
 
     // --- 部位の追加 ---
     [HttpPost("categories")]
     public async Task<IActionResult> AddCategory([FromBody] Category category) {
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
+        try {
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
 
-        using var checkCmd = new NpgsqlCommand("SELECT COUNT(*) FROM \"Categories\" WHERE \"Category_Name\" = @name", conn);
-        checkCmd.Parameters.AddWithValue("name", category.Category_Name);
-        var count = Convert.ToInt64(await checkCmd.ExecuteScalarAsync());
-        if (count > 0) return BadRequest(new { message = "その部位はすでに登録されています。" });
+            using var cmd = new NpgsqlCommand(
+                "INSERT INTO \"Categories\" (\"User_Id\", \"Category_Name\") VALUES (@userId, @name) RETURNING \"Category_Id\"",
+                conn);
+            cmd.Parameters.AddWithValue("userId", CurrentUserId);
+            cmd.Parameters.AddWithValue("name", category.Category_Name);
 
-        using var cmd = new NpgsqlCommand("INSERT INTO \"Categories\" (\"Category_Name\") VALUES (@name) RETURNING \"Category_Id\"", conn);
-        cmd.Parameters.AddWithValue("name", category.Category_Name);
-        var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        return Ok(new { category_Id = newId });
+            var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return Ok(new { category_Id = newId });
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505") {
+            // 23505 = 一意制約違反（UQ_Categories_User_Name）。
+            // 事前に COUNT(*) で確認する方式をやめ、DB制約に任せている。
+            // 確認とINSERTの間に別のリクエストが割り込む隙間が無くなるため。
+            return BadRequest(new { message = "その部位はすでに登録されています。" });
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"【Category追加エラー】: {ex.Message}");
+            return StatusCode(500, new { message = "部位の追加に失敗しました。" });
+        }
     }
 
-// --- 種目の追加 ---
+    // --- 種目の追加 ---
     [HttpPost("exercises")]
     public async Task<IActionResult> AddExercise([FromBody] Exercise exercise) {
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
+        try {
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
 
-        using var checkCmd = new NpgsqlCommand("SELECT COUNT(*) FROM \"Exercises\" WHERE \"Category_Id\" = @catId AND \"Exercise_Name\" = @name", conn);
-        checkCmd.Parameters.AddWithValue("catId", exercise.Category_Id);
-        checkCmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
-        var count = Convert.ToInt64(await checkCmd.ExecuteScalarAsync());
-        if (count > 0) return BadRequest(new { message = "その種目はすでに登録されています。" });
+            // 指定された部位が自分のものか確認する。
+            // 外部キーは「その部位が存在するか」しか見ないため、
+            // 他人の部位IDを指定された場合はここで弾く必要がある。
+            using var ownerCmd = new NpgsqlCommand(
+                "SELECT COUNT(*) FROM \"Categories\" WHERE \"Category_Id\" = @catId AND \"User_Id\" = @userId",
+                conn);
+            ownerCmd.Parameters.AddWithValue("catId", exercise.Category_Id);
+            ownerCmd.Parameters.AddWithValue("userId", CurrentUserId);
 
-        using var cmd = new NpgsqlCommand("INSERT INTO \"Exercises\" (\"Category_Id\", \"Exercise_Name\") VALUES (@catId, @name) RETURNING \"Exercise_Id\"", conn);
-        cmd.Parameters.AddWithValue("catId", exercise.Category_Id);
-        cmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
-        var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        return Ok(new { exercise_Id = newId });
+            if (Convert.ToInt64(await ownerCmd.ExecuteScalarAsync()) == 0) {
+                return BadRequest(new { message = "指定された部位が見つかりません。" });
+            }
+
+            using var cmd = new NpgsqlCommand(
+                "INSERT INTO \"Exercises\" (\"User_Id\", \"Category_Id\", \"Exercise_Name\") VALUES (@userId, @catId, @name) RETURNING \"Exercise_Id\"",
+                conn);
+            cmd.Parameters.AddWithValue("userId", CurrentUserId);
+            cmd.Parameters.AddWithValue("catId", exercise.Category_Id);
+            cmd.Parameters.AddWithValue("name", exercise.Exercise_Name);
+
+            var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return Ok(new { exercise_Id = newId });
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505") {
+            // 23505 = 一意制約違反（UQ_Exercises_User_Cat_Name）
+            return BadRequest(new { message = "その種目はすでに登録されています。" });
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"【Exercise追加エラー】: {ex.Message}");
+            return StatusCode(500, new { message = "種目の追加に失敗しました。" });
+        }
     }
 }

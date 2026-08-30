@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MuscleTrainingApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MuscleTrainingApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260830113939_AddUserOwnership")]
+    partial class AddUserOwnership
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,47 +24,6 @@ namespace MuscleTrainingApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("MuscleTrainingApi.Models.Cardio", b =>
-                {
-                    b.Property<int>("Cardio_Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("Cardio_Id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Cardio_Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAt")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<double?>("Distance_Km")
-                        .HasColumnType("double precision")
-                        .HasColumnName("Distance_Km");
-
-                    b.Property<int>("Duration_Min")
-                        .HasColumnType("integer")
-                        .HasColumnName("Duration_Min");
-
-                    b.Property<string>("Exercise_Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("Exercise_Name");
-
-                    b.Property<int>("User_Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("User_Id");
-
-                    b.HasKey("Cardio_Id");
-
-                    b.HasIndex("User_Id", "CreatedAt")
-                        .HasDatabaseName("IX_Cardio_User_CreatedAt");
-
-                    b.ToTable("Cardio", "public");
-                });
 
             modelBuilder.Entity("MuscleTrainingApi.Models.Category", b =>
                 {
@@ -198,15 +160,6 @@ namespace MuscleTrainingApi.Migrations
                         .HasDatabaseName("IX_Workout_User_CreatedAt");
 
                     b.ToTable("Workout", "public");
-                });
-
-            modelBuilder.Entity("MuscleTrainingApi.Models.Cardio", b =>
-                {
-                    b.HasOne("MuscleTrainingApi.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("User_Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("MuscleTrainingApi.Models.Category", b =>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../api';
 
 // --- 型定義 ---
 interface Category {
@@ -43,7 +44,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
 
     // --- 最新データの取り直し（登録成功後にサーバーと同期するため） ---
     const refreshCategories = async () => {
-        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories');
+        const res = await apiFetch('/api/MasterData/categories');
         const data = await res.json();
         setCategories(data.map((c: any) => ({
             category_Id: Number(c.category_Id ?? c.Category_Id) || 0,
@@ -52,7 +53,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
     };
 
     const refreshExercises = async () => {
-        const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises');
+        const res = await apiFetch('/api/MasterData/exercises');
         const data = await res.json();
         setExercises(data.map((e: any) => ({
             exercise_Id: Number(e.exercise_Id ?? e.Exercise_Id) || 0,
@@ -74,7 +75,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
         }
         // 通信自体の失敗（ネット切断・サーバー停止など）は catch で受け止める
         try {
-            const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/categories', {
+            const res = await apiFetch('/api/MasterData/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ category_Name: newCategoryName })
@@ -106,7 +107,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
         
         // 通信自体の失敗（ネット切断・サーバー停止など）は catch で受け止める
         try {
-            const res = await fetch('https://muscle-training-management.onrender.com/api/MasterData/exercises', {
+            const res = await apiFetch('/api/MasterData/exercises', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ category_Id: selectedCategoryId, exercise_Name: newExerciseName })
@@ -128,7 +129,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
     const handleDeleteCategory = async (id: number) => {
         if (!confirm("この部位を削除しますか？")) return;
         try {
-            const res = await fetch(`https://muscle-training-management.onrender.com/api/Categories/${id}`, { method: 'DELETE' });
+            const res = await apiFetch(`/api/Categories/${id}`, { method: 'DELETE' });
 
             if (res.ok) {
                 // 【通信削減】削除されたIDだけを手元のリストから省く
@@ -144,7 +145,7 @@ const SettingsPage: React.FC<Props> = ({ categories, setCategories, exercises, s
     const handleDeleteExercise = async (id: number) => {
         if (!confirm("この種目を削除しますか？")) return;
         try {
-            const res = await fetch(`https://muscle-training-management.onrender.com/api/Exercises/${id}`, { method: 'DELETE' });
+            const res = await apiFetch(`/api/Exercises/${id}`, { method: 'DELETE' });
 
             if (res.ok) {
                 // 【通信削減】削除されたIDだけを手元のリストから省く
