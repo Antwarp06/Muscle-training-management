@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from '../api';
 import ErrorRetry from "../components/ErrorRetry";
 
 // --- 型定義 ---
@@ -27,7 +28,7 @@ const CardioPage = () => {
         setIsHistoryLoading(true);
         setHistoryError(false);
         try {
-            const res = await fetch('https://muscle-training-management.onrender.com/api/Cardio');
+            const res = await apiFetch('/api/Cardio');
             if (!res.ok) throw new Error("履歴の取得失敗");
             setHistory(await res.json());
         } catch (error) {
@@ -68,7 +69,7 @@ const CardioPage = () => {
         };
 
         try {
-            const res = await fetch('https://muscle-training-management.onrender.com/api/Cardio', {
+            const res = await apiFetch('/api/Cardio', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -90,7 +91,7 @@ const CardioPage = () => {
     const handleDelete = async (cardioId: number) => {
         if (!confirm("本当に削除しますか？")) return;
         try {
-            const res = await fetch(`https://muscle-training-management.onrender.com/api/Cardio/${cardioId}`, { method: 'DELETE' });
+            const res = await apiFetch(`/api/Cardio/${cardioId}`, { method: 'DELETE' });
             if (!res.ok) {
                 alert("削除に失敗しました。");
                 return;

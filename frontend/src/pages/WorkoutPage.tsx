@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from '../api';
 import ErrorRetry from "../components/ErrorRetry";
 
 // --- 型定義 ---
@@ -32,7 +33,7 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
         setHistoryError(false); // 再実行するときは、前回のエラー表示をいったんリセット
         try {
             // 部位や種目は親から貰うので、ここでは Workouts（履歴）だけを1回ピンポイントで取得します
-            const historyRes = await fetch('https://muscle-training-management.onrender.com/api/Workouts');
+            const historyRes = await apiFetch('/api/Workouts');
             if (!historyRes.ok) throw new Error("履歴の取得失敗"); // サーバーがエラーを返した場合も catch に送る
             setHistory(await historyRes.json());
         } catch (error) {
@@ -73,7 +74,7 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
         };
 
         try {
-            const res = await fetch('https://muscle-training-management.onrender.com/api/Workouts', {
+            const res = await apiFetch('/api/Workouts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -97,7 +98,7 @@ const WorkoutPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
     const handkeDelete = async ( recordId: number ) => {
         if(!confirm("本当に削除しますか？")) return;
         try {
-            const res = await fetch(`https://muscle-training-management.onrender.com/api/Workouts/${recordId}`,{ method: 'DELETE'});
+            const res = await apiFetch(`/api/Workouts/${recordId}`,{ method: 'DELETE'});
             if (!res.ok) {
                 alert("削除に失敗しました。");
                 return;

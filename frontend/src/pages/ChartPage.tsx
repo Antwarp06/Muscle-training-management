@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '../api';
 import { Line } from 'react-chartjs-2';
 import ErrorRetry from '../components/ErrorRetry';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
@@ -39,7 +40,7 @@ const ChartPage: React.FC<Props> = ({ categories, exercises, isLoading }) => {
     const loadChartData = () => {
         setIsChartLoading(true);
         setChartError(false); // 再実行するときは、前回のエラー表示をいったんリセット
-        fetch('https://muscle-training-management.onrender.com/api/Workouts')
+        apiFetch('/api/Workouts')
             .then(res => {
                 if (!res.ok) throw new Error("グラフデータの取得失敗"); // サーバーがエラーを返した場合も catch に送る
                 return res.json();
