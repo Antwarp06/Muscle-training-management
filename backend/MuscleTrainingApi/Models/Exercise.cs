@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema; 
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace MuscleTrainingApi.Models;
 
@@ -7,10 +8,15 @@ namespace MuscleTrainingApi.Models;
 public class Exercise 
 {
     [Key]
-    [Column("Exercise_Id")] 
+    [Column("Exercise_Id")]
     public int Exercise_Id { get; set; }
 
-    [Column("Category_Id")] 
+    // 所有者。フロントから受け取らず、必ずJWTのクレームから取得した値を入れること
+    [Column("User_Id")]
+    [JsonIgnore]
+    public int User_Id { get; set; }
+
+    [Column("Category_Id")]
     [Required(ErrorMessage = "部位は必須です")]
     public int Category_Id { get; set; }
 

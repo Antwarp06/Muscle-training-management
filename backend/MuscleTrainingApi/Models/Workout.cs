@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema; 
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace MuscleTrainingApi.Models;
 
@@ -7,10 +8,16 @@ namespace MuscleTrainingApi.Models;
 public class Workout
 {
     [Key]
-    [Column("Record_Id")] 
+    [Column("Record_Id")]
     public int Record_Id { get; set; }//記録ID
 
-    [Column("Exercise_Id")] 
+    // 所有者。フロントから受け取らず、必ずJWTのクレームから取得した値を入れること。
+    // JsonIgnore を付けているので、リクエストのJSONに User_Id を混ぜられても無視される。
+    [Column("User_Id")]
+    [JsonIgnore]
+    public int User_Id { get; set; }//記録した人
+
+    [Column("Exercise_Id")]
     public int Exercise_Id { get; set; }//IDで紐づけ
 
     [Column("Weight")]
